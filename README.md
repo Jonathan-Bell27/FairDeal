@@ -79,10 +79,6 @@ Start at **100**. Subtract **1 point per $100** of avoidable cost, capped at **2
 2. **Spanish toggle** for results and counteroffer.
 3. **True monthly cost of ownership**: insurance, gas, and repairs.
 
-## Future Vision
-
-**Fair Deal Verified**: a dealer-side badge. Honest dealers run their offers through FairDeal to prove transparency to buyers, turning the tool into a two-sided platform.
-
 ---
 
 ## Tech Stack
@@ -94,37 +90,3 @@ Start at **100**. Subtract **1 point per $100** of avoidable cost, capped at **2
 | LLM | Claude API with structured outputs (reads photos and PDFs natively) |
 | Data | Supabase (APR by tier, add-on price ranges, uploads, test results) |
 | Hosting | Vercel (frontend), Render or Railway (backend) |
-
----
-
-## Running Locally
-
-```bash
-git clone https://github.com/Jonathan-Bell27/FairDeal.git
-cd FairDeal
-```
-
-**Backend**
-```bash
-cd server
-npm install
-```
-Create `server/.env`:
-```
-ANTHROPIC_API_KEY=your-key-here
-PORT=3001
-```
-Then run `npm run dev`.
-
-**Frontend** (separate terminal)
-```bash
-cd client
-npm install
-npm run dev
-```
-
----
-
-## Definition of Done
-
-Upload the predatory sample contract on a phone, get correct flags with dollar amounts in under a minute, and copy or text the counteroffer.
