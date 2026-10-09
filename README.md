@@ -1,1 +1,130 @@
 # FairDeal
+
+**Hacklanta II | Social Good Track (presented by Cox Automotive)**
+
+Snap a photo of a car loan offer or buyer's order. FairDeal reads the terms, flags junk add-ons, overpriced protection products, markups, and APRs well above typical for your credit tier, then writes a counteroffer you can send straight to the dealer.
+
+Built mobile-first for buyers standing on the lot.
+
+---
+
+## How It Works
+
+1. **Upload** a photo or PDF of the deal and pick your credit tier.
+2. **Review** the terms Claude extracted. Fix anything it misread.
+3. **See the results**: a Deal Score, every red flag with its dollar impact and source, and your total potential savings.
+4. **Push back** with a generated counteroffer. Copy it or text it to the dealer in one tap.
+
+---
+
+## MVP Features
+
+### 1. Input
+- Photo or PDF upload
+- Credit tier dropdown: Excellent / Good / Fair / Poor
+- Manual entry form as a fallback if extraction fails
+
+### 2. Extraction
+Claude reads the document and fills a fixed JSON schema:
+- Vehicle price
+- APR
+- Loan term
+- Down payment
+- Monthly payment
+- Itemized fees and add-ons
+
+The user reviews and edits every field before analysis.
+
+### 3. Rules Engine
+Plain code, not the LLM, so every flag is deterministic and explainable.
+
+| Check | What it flags |
+| --- | --- |
+| APR vs. credit tier | Rate well above typical for the user's credit tier |
+| Add-ons and protection products | VIN etching, nitrogen tires, paint protection, dealer prep, GAP, extended warranty priced above typical ranges |
+| Payment packing | 72+ month terms; shows total paid vs. car price |
+| Price vs. market | Deal price vs. the KBB value the user enters |
+
+### 4. Results Screen
+- Deal Score
+- Each flag with its dollar impact and source
+- Total potential savings
+- Disclaimer: AI-assisted analysis for informational purposes. Not financial advice.
+
+### 5. Counteroffer
+- Generated message asking the dealer to remove flagged items and match a fair rate
+- Copy button
+- `sms:` link that opens the phone's text app pre-filled
+
+### 6. Mobile-First UI
+Built and tested on a phone from day one.
+
+---
+
+## Deal Score
+
+Start at **100**. Subtract **1 point per $100** of avoidable cost, capped at **25 points per flag**. Minimum **0**.
+
+| Score | Verdict |
+| --- | --- |
+| 85 to 100 | Fair deal |
+| 60 to 84 | Negotiate before signing |
+| Below 60 | Walk away or get outside financing |
+
+---
+
+## Stretch Goals
+
+1. **Accuracy test**: 10 sample contracts plus a script that reports extraction and flag accuracy.
+2. **Spanish toggle** for results and counteroffer.
+3. **True monthly cost of ownership**: insurance, gas, and repairs.
+
+## Future Vision
+
+**Fair Deal Verified**: a dealer-side badge. Honest dealers run their offers through FairDeal to prove transparency to buyers, turning the tool into a two-sided platform.
+
+---
+
+## Tech Stack
+
+| Layer | Tech |
+| --- | --- |
+| Frontend | React (Vite), mobile-first |
+| Backend | Node.js / Express (holds the API key, runs the rules engine) |
+| LLM | Claude API with structured outputs (reads photos and PDFs natively) |
+| Data | Supabase (APR by tier, add-on price ranges, uploads, test results) |
+| Hosting | Vercel (frontend), Render or Railway (backend) |
+
+---
+
+## Running Locally
+
+```bash
+git clone https://github.com/Jonathan-Bell27/FairDeal.git
+cd FairDeal
+```
+
+**Backend**
+```bash
+cd server
+npm install
+```
+Create `server/.env`:
+```
+ANTHROPIC_API_KEY=your-key-here
+PORT=3001
+```
+Then run `npm run dev`.
+
+**Frontend** (separate terminal)
+```bash
+cd client
+npm install
+npm run dev
+```
+
+---
+
+## Definition of Done
+
+Upload the predatory sample contract on a phone, get correct flags with dollar amounts in under a minute, and copy or text the counteroffer.
