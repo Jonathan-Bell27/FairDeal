@@ -1,0 +1,218 @@
+[
+  {
+    "file": "01_clean.pdf",
+    "scenario": "Clean deal (should score high)",
+    "document_type": "Buyer's order",
+    "test_inputs": {
+      "credit_tier": "Excellent",
+      "kbb_value_to_enter": 24800
+    },
+    "expected_extraction": {
+      "vehicle": "2023 Toyota Camry LE 4D SEDAN",
+      "mileage": 18204,
+      "vehicle_price": 24500.0,
+      "apr": 6.49,
+      "term_months": 60,
+      "down_payment": 4000.0,
+      "trade_in_allowance": 0.0,
+      "trade_in_payoff": 0.0,
+      "monthly_payment": 447.02,
+      "amount_financed": 22852.0,
+      "total_of_payments": 26821.2,
+      "fees": [
+        {
+          "name": "Documentary Service Fee",
+          "amount": 599.0
+        }
+      ],
+      "add_ons": [],
+      "taxes_and_government_fees": {
+        "tavt": 1715.0,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [],
+    "notes": "Fair price, single reasonable doc fee, no add-ons, APR typical for excellent credit, 60-month term."
+  },
+  {
+    "file": "02_predatory.pdf",
+    "scenario": "Predatory deal (should score very low)",
+    "document_type": "Buyer's order",
+    "test_inputs": {
+      "credit_tier": "Good",
+      "kbb_value_to_enter": 19800
+    },
+    "expected_extraction": {
+      "vehicle": "2021 Nissan Altima 2.5 SV 4D SEDAN",
+      "mileage": 47880,
+      "vehicle_price": 22995.0,
+      "apr": 18.99,
+      "term_months": 84,
+      "down_payment": 1000.0,
+      "trade_in_allowance": 0.0,
+      "trade_in_payoff": 0.0,
+      "monthly_payment": 700.33,
+      "amount_financed": 32419.65,
+      "total_of_payments": 58827.72,
+      "fees": [
+        {
+          "name": "Documentary Service Fee",
+          "amount": 899.0
+        },
+        {
+          "name": "Dealer Prep / Reconditioning",
+          "amount": 895.0
+        }
+      ],
+      "add_ons": [
+        {
+          "name": "VIN Etch Theft Deterrent",
+          "amount": 499.0
+        },
+        {
+          "name": "Nitrogen Tire Fill",
+          "amount": 199.0
+        },
+        {
+          "name": "ProShield Paint & Fabric Protection",
+          "amount": 1295.0
+        },
+        {
+          "name": "GAP Waiver",
+          "amount": 1495.0
+        },
+        {
+          "name": "Extended Service Contract 72mo/100k",
+          "amount": 3495.0
+        }
+      ],
+      "taxes_and_government_fees": {
+        "tavt": 1609.65,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [
+      "APR 18.99% far above typical for Good credit",
+      "84-month term (payment packing)",
+      "Price ~$3,195 above market (KBB $19,800)",
+      "VIN etching overpriced",
+      "Nitrogen fill is junk add-on",
+      "Paint & fabric protection overpriced",
+      "GAP overpriced (often far cheaper via insurer or credit union)",
+      "Extended service contract heavily marked up",
+      "Dealer prep fee (cost of doing business, should be in price)",
+      "Doc fee on the high end"
+    ],
+    "notes": "Every red flag in one deal. Use this as the main demo contract."
+  },
+  {
+    "file": "03_borderline.pdf",
+    "scenario": "Borderline deal (should land in 'Negotiate')",
+    "document_type": "Buyer's order",
+    "test_inputs": {
+      "credit_tier": "Good",
+      "kbb_value_to_enter": 28100
+    },
+    "expected_extraction": {
+      "vehicle": "2022 Honda Cr-V EX AWD 4D SUV",
+      "mileage": 31450,
+      "vehicle_price": 28900.0,
+      "apr": 9.49,
+      "term_months": 72,
+      "down_payment": 3000.0,
+      "trade_in_allowance": 6000.0,
+      "trade_in_payoff": 4200.0,
+      "monthly_payment": 512.54,
+      "amount_financed": 28054.0,
+      "total_of_payments": 36902.88,
+      "fees": [
+        {
+          "name": "Documentary Service Fee",
+          "amount": 699.0
+        }
+      ],
+      "add_ons": [
+        {
+          "name": "VIN Etch Theft Deterrent",
+          "amount": 299.0
+        },
+        {
+          "name": "GAP Waiver",
+          "amount": 895.0
+        }
+      ],
+      "taxes_and_government_fees": {
+        "tavt": 2023.0,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [
+      "APR slightly above typical for Good credit",
+      "72-month term (borderline payment packing)",
+      "Price ~$800 above market (KBB $28,100)",
+      "VIN etching (minor)",
+      "GAP somewhat high"
+    ],
+    "notes": "Some issues, nothing outrageous. Tests that the score lands in the middle band. Also tests trade-in with payoff."
+  },
+  {
+    "file": "04_risc_buy_here_pay_here.pdf",
+    "scenario": "Retail installment contract, buy-here-pay-here (different format)",
+    "document_type": "Retail installment sale contract",
+    "test_inputs": {
+      "credit_tier": "Poor",
+      "kbb_value_to_enter": 11500
+    },
+    "expected_extraction": {
+      "vehicle": "2018 Ford Escape SE FWD 4D SUV",
+      "mileage": 96310,
+      "vehicle_price": 14995.0,
+      "apr": 23.99,
+      "term_months": 72,
+      "down_payment": 1500.0,
+      "trade_in_allowance": 0.0,
+      "trade_in_payoff": 0.0,
+      "monthly_payment": 512.38,
+      "amount_financed": 19466.65,
+      "total_of_payments": 36891.36,
+      "fees": [
+        {
+          "name": "Documentary Fee",
+          "amount": 799.0
+        }
+      ],
+      "add_ons": [
+        {
+          "name": "Service Contract (Powertrain 36mo)",
+          "amount": 2195.0
+        },
+        {
+          "name": "GAP Waiver",
+          "amount": 1195.0
+        },
+        {
+          "name": "GPS Tracking / Starter Interrupt Device",
+          "amount": 695.0
+        }
+      ],
+      "taxes_and_government_fees": {
+        "tavt": 1049.65,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [
+      "APR 23.99% above typical even for Poor credit",
+      "72-month term on a 96k-mile 2018 vehicle",
+      "Price ~$3,495 above market (KBB $11,500)",
+      "Service contract overpriced",
+      "GAP overpriced",
+      "GPS/starter interrupt device charged to buyer",
+      "Doc fee on the high end"
+    ],
+    "notes": "Different layout (TILA disclosure box). Tests that extraction works on a lending document, not just a buyer's order."
+  }
+]
