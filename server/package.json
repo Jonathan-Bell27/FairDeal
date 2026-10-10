@@ -7,7 +7,8 @@
     "dev": "nodemon index.js",
     "start": "node index.js",
     "test": "node --test",
-    "check": "node scripts/check-extraction.js"
+    "check": "node scripts/check-extraction.js",
+    "advise": "node scripts/check-advisor.js"
   },
   "keywords": [],
   "author": "",

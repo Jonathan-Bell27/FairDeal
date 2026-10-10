@@ -7,11 +7,12 @@ import Upload from "./screens/Upload.jsx";
 import Review from "./screens/Review.jsx";
 import Results from "./screens/Results.jsx";
 import Counteroffer from "./screens/Counteroffer.jsx";
+import Advisor from "./screens/Advisor.jsx";
 import { PenSquiggle } from "./Pen.jsx";
 
 const saved = loadSession();
 // A results screen can't be restored without its result.
-if (saved && !saved.result && (saved.screen === "results" || saved.screen === "counter")) saved.screen = "review";
+if (saved && !saved.result && ["results", "counter", "advisor"].includes(saved.screen)) saved.screen = "review";
 
 const hasPrice = (deal) => Number(String(deal.vehicle_price).replace(/[$,]/g, "")) > 0;
 const keyOf = (...inputs) => JSON.stringify(inputs);
@@ -26,6 +27,9 @@ export default function App() {
   const [result, setResult] = useState(saved?.result ?? null);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState("");
+  const [profile, setProfile] = useState(saved?.profile ?? { zip: "", monthly_income: "", keep_years: "", notes: "" });
+  // Claude's research, tagged with the inputs it was run on so edits trigger a fresh run.
+  const [advice, setAdvice] = useState(saved?.advice ?? null);
   const [lang, setLang] = useState(initialLang);
   const [theme, setTheme] = useState(initialTheme);
   const t = STRINGS[lang];
@@ -33,8 +37,8 @@ export default function App() {
   useEffect(wakeServer, []);
   useEffect(() => window.scrollTo(0, 0), [screen]);
   useEffect(() => {
-    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result });
-  }, [screen, creditTier, kbbValue, deal, extractMs, result]);
+    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice });
+  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -42,6 +46,8 @@ export default function App() {
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
+
+  const adviceKey = keyOf(deal, creditTier, kbbValue, lang, profile);
 
   const toggleLang = () => {
     const next = lang === "en" ? "es" : "en";
@@ -112,6 +118,7 @@ export default function App() {
     setDeal(emptyDeal());
     setExtractMs(null);
     setResult(null);
+    setAdvice(null);
     setError("");
     setScreen("upload");
   };
@@ -185,7 +192,28 @@ export default function App() {
             />
           )}
           {screen === "results" && result && (
-            <Results result={result} onEdit={() => setScreen("review")} onCounter={() => setScreen("counter")} />
+            <Results
+              result={result}
+              onEdit={() => setScreen("review")}
+              onCounter={() => setScreen("counter")}
+              profile={profile}
+              setProfile={setProfile}
+              hasReport={advice?.key === adviceKey}
+              onAdvise={() => setScreen("advisor")}
+            />
+          )}
+          {screen === "advisor" && result && (
+            <Advisor
+              key={adviceKey}
+              deal={deal}
+              creditTier={creditTier}
+              kbbValue={kbbValue}
+              lang={lang}
+              profile={profile}
+              report={advice?.key === adviceKey ? advice.report : null}
+              setReport={(report) => setAdvice({ key: adviceKey, report })}
+              onBack={() => setScreen("results")}
+            />
           )}
           {screen === "counter" && result && (
             <Counteroffer key={result.counteroffer} text={result.counteroffer} onBack={() => setScreen("results")} />
