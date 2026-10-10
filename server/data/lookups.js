@@ -28,8 +28,8 @@ export const ADD_ONS = [
     match: /gps|starter.?interrupt|tracking device|kill.?switch/i,
     fair: 0,
     flagAbove: 0,
-    why: "This device protects the lender, not you. It shouldn't be charged to the buyer.",
-    source: "CFPB guidance on add-on products; lender-required devices are a lender cost",
+    why: "This device lets the lender track or disable your car if you miss a payment. It protects the lender, not you, so ask for the charge to be removed.",
+    source: "FairDeal reasoning (the device serves the lender); the FTC investigated lenders' use of these devices in 2017",
   },
   {
     key: "nitrogen",
@@ -46,8 +46,8 @@ export const ADD_ONS = [
     match: /\bprep\b|recondition|pre-?delivery|\bpdi\b/i,
     fair: 0,
     flagAbove: 0,
-    why: "Getting the car ready to sell is the dealer's cost of doing business and belongs in the advertised price.",
-    source: "FTC, Buying a Used Car guidance on dealer fees",
+    why: "Getting the car ready to sell is already built into the price, so a separate prep or reconditioning fee charges you twice. These fees are legal but negotiable.",
+    source: "NerdWallet, What Is a Reconditioning Fee on a Used Car?; CarEdge",
   },
   {
     key: "vin_etch",
@@ -97,8 +97,8 @@ export const ADD_ONS = [
     match: /tire.*wheel|wheel.*tire/i,
     fair: 300,
     flagAbove: 600,
-    why: "Tire and wheel plans are high-margin add-ons that rarely pay out their cost.",
-    source: "Typical dealer markup on tire and wheel protection",
+    why: "Consumer Reports says most cars don't have the expensive low-profile tires this protects, and it often costs several hundred dollars. Check what your car insurance already covers.",
+    source: "Consumer Reports, Just Say No to These Car Dealership Extras (Apr 2026)",
   },
   {
     key: "key_replacement",
@@ -107,16 +107,17 @@ export const ADD_ONS = [
     fair: 150,
     flagAbove: 300,
     why: "A replacement key fob usually costs less than this plan.",
-    source: "Typical key fob replacement cost",
+    source: "FairDeal estimate of key fob replacement cost",
   },
   {
     key: "doc_fee",
     label: "Documentation fee",
     match: /doc|documentary|documentation/i,
-    fair: 500,
+    // Georgia average; flag only when about $100+ over it.
+    fair: 599,
     flagAbove: 700,
-    why: "This doc fee is on the high end. Georgia doesn't cap doc fees, so ask for it to be lowered or offset in the price.",
-    source: "Typical dealer doc fees by state (Georgia has no cap)",
+    why: "The average dealer doc fee in Georgia is $599. Doc fees are hard to negotiate, so ask the dealer to take the extra off the vehicle price instead.",
+    source: "CarEdge, Car Dealer Doc Fee by State in 2026",
   },
 ];
 

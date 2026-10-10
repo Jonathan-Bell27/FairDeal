@@ -158,9 +158,11 @@ function checkAddOns(deal) {
         detail: rule.why,
         impact,
         source: rule.source,
-        ask: remove || rule.key === "vin_etch" || rule.key === "paint_protection"
-          ? `Remove the ${item.name} (${usd(item.amount)}).`
-          : `Lower the ${item.name} from ${usd(item.amount)} to ${usd(rule.fair)}, or remove it.`,
+        ask: rule.key === "doc_fee"
+          ? `Take ${usd(impact)} off the vehicle price to offset the ${item.name}, which is above the ${usd(rule.fair)} state average.`
+          : remove || rule.key === "vin_etch" || rule.key === "paint_protection"
+            ? `Remove the ${item.name} (${usd(item.amount)}).`
+            : `Lower the ${item.name} from ${usd(item.amount)} to ${usd(rule.fair)}, or remove it.`,
       }),
     );
   }
