@@ -53,10 +53,10 @@ export const ADD_ONS = [
     key: "vin_etch",
     label: "VIN etching",
     match: /vin.?etch|etch|theft.?deter/i,
-    fair: 25,
+    fair: 20,
     flagAbove: 100,
-    why: "A DIY VIN etching kit costs about $25, and some insurers do it free.",
-    source: "Typical retail price of DIY VIN etch kits",
+    why: "A DIY VIN etching kit costs about $20 and can do more than one car. Dealers charge up to $400 for the same thing.",
+    source: "GoodCar, What Is VIN Etching? (Oct 2024), citing MotorBiscuit",
   },
   {
     key: "paint_protection",
