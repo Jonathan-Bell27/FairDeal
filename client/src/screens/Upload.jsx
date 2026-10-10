@@ -4,7 +4,7 @@ import { LangContext, useT } from "../i18n.js";
 import { prepareUpload } from "../image.js";
 import { PenCircle } from "../Pen.jsx";
 
-export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValue, onExtracted, onManual }) {
+export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValue, onExtracted, onManual, notice }) {
   const lang = useContext(LangContext);
   const t = useT();
   const u = t.upload;
@@ -87,9 +87,9 @@ export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValu
         </label>
       </div>
 
-      {error && (
+      {(error || notice) && (
         <div className="alert" role="alert">
-          {error}
+          {error || notice}
         </div>
       )}
 

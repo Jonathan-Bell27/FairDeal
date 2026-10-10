@@ -2,7 +2,20 @@ import { usd } from "../format.js";
 import { useT } from "../i18n.js";
 import Dial from "../Dial.jsx";
 
-export default function Results({ result, onEdit, onCounter, profile, setProfile, onAdvise, hasReport, onChat, onPractice }) {
+export default function Results({
+  result,
+  onEdit,
+  onCounter,
+  onShare,
+  shared,
+  onStartOver,
+  profile,
+  setProfile,
+  onAdvise,
+  hasReport,
+  onChat,
+  onPractice,
+}) {
   const t = useT().results;
   const { score, verdict, total_savings, flags, disclaimer } = result;
   // Red flags first, biggest dollar amount first; cautions after.
@@ -12,6 +25,14 @@ export default function Results({ result, onEdit, onCounter, profile, setProfile
 
   return (
     <section className="screen">
+      {shared && (
+        <div className="shared-banner" role="status">
+          <p>{t.sharedBanner}</p>
+          <button className="link" onClick={onStartOver}>
+            {t.checkOwn}
+          </button>
+        </div>
+      )}
       <p className="eyebrow">{t.eyebrow}</p>
 
       <div className="sheet verdict-sheet">
@@ -54,6 +75,11 @@ export default function Results({ result, onEdit, onCounter, profile, setProfile
         <button className="btn red big" onClick={onCounter}>
           {flags.length ? t.counter : t.message}
         </button>
+        {onShare && (
+          <button className="btn" onClick={onShare}>
+            {t.share}
+          </button>
+        )}
         <button className="btn" onClick={onEdit}>
           {t.edit}
         </button>
