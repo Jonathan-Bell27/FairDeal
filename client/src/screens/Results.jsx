@@ -34,6 +34,12 @@ export default function Results({ result, onEdit, onCounter, profile, setProfile
             {lines.map((f, i) => (
               <Line key={f.id} flag={f} index={i} t={t} />
             ))}
+            {result.savings_overlap > 0 && (
+              <div className="overlap">
+                <span>{t.overlap}</span>
+                <span className="overlap-amount">+{usd(result.savings_overlap)}</span>
+              </div>
+            )}
             {total_savings > 0 && (
               <div className="total">
                 <span>{t.total}</span>

@@ -12,7 +12,7 @@ Fictional Georgia car deals for testing extraction and the rules engine. `answer
 | 06 | New car, 1.9% promo rate | Buyer's order | Fair deal |
 | 07 | High-mileage SUV, stacked add-ons | Retail installment contract + phone photo | Walk away |
 | 08 | Cash deal, no loan terms on the page | Buyer's order | Negotiate |
-| 09 | 84-month payment packing, zero down | Buyer's order + phone photo (blurry) | Walk away |
+| 09 | 84-month loan, zero down | Buyer's order + phone photo (blurry) | Walk away |
 | 10 | Close call, small markups | Retail installment contract | Negotiate |
 
 Each contract has a PDF and a PNG; some also have a phone photo (angled, uneven light, slight blur).

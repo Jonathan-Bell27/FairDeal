@@ -838,6 +838,20 @@ textarea:focus {
   color: var(--muted);
   margin: 0 !important;
 }
+.overlap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 0 4px;
+  border-top: 1px dashed var(--rule);
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.overlap-amount {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
 .total {
   display: flex;
   justify-content: space-between;

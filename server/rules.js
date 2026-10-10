@@ -239,6 +239,19 @@ function checkPrice(deal, kbbValue, m) {
   ];
 }
 
+// The APR flag prices a lower rate at the contract's term, and the term flag
+// prices 60 months at the contract's rate. Fixing both saves less than the two
+// added together, because both cut the same interest. This is the part counted
+// twice, so the total shows what fixing everything together would really save.
+export function savingsOverlap(deal, creditTier, flags) {
+  const scored = (id) => flags.some((f) => f.id === id && f.severity === "red");
+  if (!scored("apr") || !scored("term")) return 0;
+  const total = (apr, months) => monthlyPayment(deal.amount_financed, apr, months) * months;
+  const fair = TYPICAL_APR[creditTier].apr;
+  const n = deal.term_months;
+  return Math.max(0, Math.round(total(deal.apr, n) - total(fair, n) - total(deal.apr, 60) + total(fair, 60)));
+}
+
 export function verdictFor(score, lang = "en") {
   const key = score >= 85 ? "fair" : score >= 60 ? "negotiate" : "walk";
   return { key, label: messages(lang).verdict[key] };
@@ -270,14 +283,16 @@ export function analyze(rawDeal, { creditTier, kbbValue, lang = "en" } = {}) {
 
   const penalty = flags.reduce((s, f) => s + f.points, 0);
   const score = Math.max(0, 100 - penalty);
+  const overlap = savingsOverlap(deal, creditTier, flags);
   const totalSavings = flags
     .filter((f) => f.severity === "red")
-    .reduce((s, f) => s + f.dollar_impact, 0);
+    .reduce((s, f) => s + f.dollar_impact, 0) - overlap;
 
   return {
     score,
     verdict: verdictFor(score, lang),
     total_savings: totalSavings,
+    savings_overlap: overlap,
     flags,
     counteroffer: buildCounteroffer(deal, flags, lang),
     deal,
