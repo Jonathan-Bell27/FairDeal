@@ -1094,8 +1094,164 @@ textarea {
   border: 0;
 }
 
+/* ---------- Ask FairDeal + negotiation practice ---------- */
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0 12px;
+}
+.bubble {
+  max-width: 88%;
+  padding: 10px 14px;
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+}
+.bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+}
+.bubble.assistant {
+  align-self: flex-start;
+  background: var(--sheet);
+  border: 1px solid var(--rule);
+  border-bottom-left-radius: 4px;
+  box-shadow: var(--shadow);
+}
+.bubble.user {
+  align-self: flex-end;
+  background: var(--ink);
+  color: var(--paper);
+  border-bottom-right-radius: 4px;
+}
+.who {
+  display: block;
+  margin-bottom: 4px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.practice .who {
+  color: var(--amber);
+}
+.searched {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.searched::before {
+  content: "⌕ ";
+}
+.caret {
+  display: inline-block;
+  width: 7px;
+  height: 1.05em;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--red);
+  animation: blink 0.9s steps(1) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.chip {
+  padding: 8px 12px;
+  border: 1.5px solid var(--rule);
+  border-radius: 999px;
+  background: var(--sheet);
+  color: var(--ink);
+  font-size: 0.9rem;
+  text-align: left;
+  cursor: pointer;
+}
+.chip:hover {
+  border-color: var(--red);
+}
+.composer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 0 calc(10px + env(safe-area-inset-bottom));
+  background: var(--paper);
+}
+.composer textarea {
+  flex: 1;
+  resize: none;
+  max-height: 120px;
+  field-sizing: content;
+}
+.composer .send {
+  width: auto;
+  flex: none;
+  padding: 10px 16px;
+}
+.feedback {
+  border-left: 5px solid var(--muted);
+}
+.feedback.fair {
+  border-left-color: var(--g-green);
+}
+.feedback.negotiate {
+  border-left-color: var(--g-yellow);
+}
+.feedback.walk {
+  border-left-color: var(--g-red);
+}
+.feedback h3 {
+  margin: 14px 0 4px;
+  font-size: 0.95rem;
+}
+.feedback ul {
+  margin: 0;
+  padding-left: 20px;
+}
+.feedback-score {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 2.6rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.feedback-score small {
+  font-size: 1rem;
+  color: var(--muted);
+}
+.feedback.fair .feedback-score {
+  color: var(--g-green-text);
+}
+.feedback.negotiate .feedback-score {
+  color: var(--g-yellow-text);
+}
+.feedback.walk .feedback-score {
+  color: var(--g-red-text);
+}
+.quick-links {
+  margin: 10px 0 0;
+  font-size: 0.93rem;
+  color: var(--muted);
+}
+.quick-links .link {
+  padding: 4px 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .research-log li.active .log-mark,
+  .caret,
   .dial.landed .dial-zone.active,
   .dial.landed .dial-burst,
   .dial.landed .dial-number,
