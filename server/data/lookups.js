@@ -86,7 +86,7 @@ export const ADD_ONS = [
   {
     key: "service_contract",
     label: "Extended warranty / service contract",
-    match: /service contract|extended|warranty|powertrain|vsc|protection plan/i,
+    match: /service (contract|agreement)|extended|warranty|powertrain|vsc|protection plan/i,
     // Fair prices vary too much to call one overpriced; instead show the
     // interest paid on it when it's rolled into the loan (not scored).
     financed: true,

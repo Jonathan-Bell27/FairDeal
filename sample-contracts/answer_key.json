@@ -214,5 +214,314 @@
       "Doc fee on the high end"
     ],
     "notes": "Different layout (TILA disclosure box). Tests that extraction works on a lending document, not just a buyer's order."
+  },
+  {
+    "file": "05_negative_equity_trade.pdf",
+    "scenario": "Trade-in with negative equity rolled into a 75-month loan (should land in 'Negotiate')",
+    "document_type": "Buyer's order",
+    "test_inputs": {
+      "credit_tier": "Fair",
+      "kbb_value_to_enter": 21500
+    },
+    "expected_extraction": {
+      "vehicle": "2020 Honda Civic EX 4D SEDAN",
+      "mileage": 52140,
+      "vehicle_price": 21995.0,
+      "apr": 14.99,
+      "term_months": 75,
+      "down_payment": 500.0,
+      "trade_in_allowance": 4000.0,
+      "trade_in_payoff": 7800.0,
+      "monthly_payment": 591.43,
+      "amount_financed": 28685.65,
+      "total_of_payments": 44357.25,
+      "fees": [
+        {
+          "name": "Documentary Service Fee",
+          "amount": 599.0
+        }
+      ],
+      "add_ons": [
+        {
+          "name": "GAP Waiver",
+          "amount": 795.0
+        },
+        {
+          "name": "Tire & Wheel Protection",
+          "amount": 699.0
+        }
+      ],
+      "taxes_and_government_fees": {
+        "tavt": 1259.65,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [
+      "APR 14.99% above typical for Fair credit",
+      "75-month term (caution, not scored)",
+      "Price ~$495 above market (KBB $21,500)",
+      "GAP somewhat high",
+      "Tire & wheel protection overpriced"
+    ],
+    "notes": "Trade-in owes $3,800 more than it's worth; that negative equity is added to the loan. Tests extracting trade-in allowance and payoff separately."
+  },
+  {
+    "file": "06_new_car_promo_rate.pdf",
+    "scenario": "New car with a 1.9% promotional rate (should score high)",
+    "document_type": "Buyer's order",
+    "test_inputs": {
+      "credit_tier": "Excellent",
+      "kbb_value_to_enter": 23700
+    },
+    "expected_extraction": {
+      "vehicle": "2026 Toyota Corolla LE 4D SEDAN",
+      "mileage": 12,
+      "vehicle_price": 23450.0,
+      "apr": 1.9,
+      "term_months": 60,
+      "down_payment": 3000.0,
+      "trade_in_allowance": 0.0,
+      "trade_in_payoff": 0.0,
+      "monthly_payment": 395.64,
+      "amount_financed": 22628.5,
+      "total_of_payments": 23738.4,
+      "fees": [
+        {
+          "name": "Documentary Service Fee",
+          "amount": 499.0
+        }
+      ],
+      "add_ons": [],
+      "taxes_and_government_fees": {
+        "tavt": 1641.5,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [],
+    "notes": "New vehicle, low promo APR, price below KBB, one modest doc fee. Tests that a low APR and a new car don't trigger flags."
+  },
+  {
+    "file": "07_risc_high_mileage.pdf",
+    "scenario": "Retail installment contract on a high-mileage SUV, stacked add-ons (should score very low)",
+    "document_type": "Retail installment sale contract",
+    "test_inputs": {
+      "credit_tier": "Poor",
+      "kbb_value_to_enter": 9800
+    },
+    "expected_extraction": {
+      "vehicle": "2016 Nissan Rogue S AWD 4D SUV",
+      "mileage": 118450,
+      "vehicle_price": 12995.0,
+      "apr": 26.99,
+      "term_months": 60,
+      "down_payment": 1000.0,
+      "trade_in_allowance": 0.0,
+      "trade_in_payoff": 0.0,
+      "monthly_payment": 553.61,
+      "amount_financed": 18133.65,
+      "total_of_payments": 33216.6,
+      "fees": [
+        {
+          "name": "Documentary Fee",
+          "amount": 899.0
+        }
+      ],
+      "add_ons": [
+        {
+          "name": "Vehicle Service Agreement",
+          "amount": 2495.0
+        },
+        {
+          "name": "GPS Locator Device",
+          "amount": 499.0
+        },
+        {
+          "name": "Tire & Wheel Protection",
+          "amount": 899.0
+        },
+        {
+          "name": "Key Replacement Plan",
+          "amount": 399.0
+        }
+      ],
+      "taxes_and_government_fees": {
+        "tavt": 909.65,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [
+      "APR 26.99% far above typical for Poor credit",
+      "Price ~$3,195 above market (KBB $9,800)",
+      "GPS locator device charged to buyer",
+      "Tire & wheel protection overpriced",
+      "Key replacement plan overpriced",
+      "Doc fee on the high end",
+      "Service agreement financed at 26.99% (caution, not scored)"
+    ],
+    "notes": "TILA-box layout like 04 but a different dealer and line names ('Vehicle Service Agreement', 'GPS Locator Device')."
+  },
+  {
+    "file": "08_cash_deal_no_financing.pdf",
+    "scenario": "Cash / outside-financing deal with no loan terms on the document (should land in 'Negotiate')",
+    "document_type": "Buyer's order",
+    "test_inputs": {
+      "credit_tier": "Good",
+      "kbb_value_to_enter": 31000
+    },
+    "expected_extraction": {
+      "vehicle": "2022 Ford F-150 XLT SUPERCREW 4X4",
+      "mileage": 38900,
+      "vehicle_price": 32495.0,
+      "apr": 0.0,
+      "term_months": 0,
+      "down_payment": 2000.0,
+      "trade_in_allowance": 0.0,
+      "trade_in_payoff": 0.0,
+      "monthly_payment": 0.0,
+      "amount_financed": 0.0,
+      "total_of_payments": 0.0,
+      "fees": [
+        {
+          "name": "Documentary Service Fee",
+          "amount": 699.0
+        }
+      ],
+      "add_ons": [
+        {
+          "name": "Nitrogen Tire Fill",
+          "amount": 149.0
+        },
+        {
+          "name": "Ceramic Paint Coating",
+          "amount": 899.0
+        }
+      ],
+      "taxes_and_government_fees": {
+        "tavt": 2274.65,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [
+      "Price ~$1,495 above market (KBB $31,000)",
+      "Ceramic paint coating overpriced",
+      "Nitrogen fill is a junk add-on"
+    ],
+    "notes": "Finance terms read N/A. APR, term, monthly payment, amount financed and total of payments should all extract as 0. Tests that missing loan terms don't break extraction or the rules."
+  },
+  {
+    "file": "09_payment_packing_84mo.pdf",
+    "scenario": "84-month payment-packed deal with reconditioning fee and stacked plans (should score very low)",
+    "document_type": "Buyer's order",
+    "test_inputs": {
+      "credit_tier": "Good",
+      "kbb_value_to_enter": 26000
+    },
+    "expected_extraction": {
+      "vehicle": "2021 Jeep Grand Cherokee Laredo 4X4",
+      "mileage": 61200,
+      "vehicle_price": 27990.0,
+      "apr": 12.49,
+      "term_months": 84,
+      "down_payment": 0.0,
+      "trade_in_allowance": 0.0,
+      "trade_in_payoff": 0.0,
+      "monthly_payment": 662.43,
+      "amount_financed": 36974.3,
+      "total_of_payments": 55644.12,
+      "fees": [
+        {
+          "name": "Documentary Service Fee",
+          "amount": 799.0
+        },
+        {
+          "name": "Reconditioning Fee",
+          "amount": 1495.0
+        }
+      ],
+      "add_ons": [
+        {
+          "name": "Tire & Wheel Protection",
+          "amount": 1199.0
+        },
+        {
+          "name": "Key Replacement Plan",
+          "amount": 499.0
+        },
+        {
+          "name": "Extended Warranty 60mo/75k",
+          "amount": 2995.0
+        }
+      ],
+      "taxes_and_government_fees": {
+        "tavt": 1959.3,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [
+      "APR 12.49% above typical for Good credit",
+      "84-month term (payment packing)",
+      "Price ~$1,990 above market (KBB $26,000)",
+      "Reconditioning fee (cost of doing business)",
+      "Tire & wheel protection overpriced",
+      "Key replacement plan overpriced",
+      "Doc fee on the high end",
+      "Extended warranty financed at 12.49% (caution, not scored)"
+    ],
+    "notes": "Zero down, everything rolled into an 84-month loan."
+  },
+  {
+    "file": "10_close_call.pdf",
+    "scenario": "Mostly reasonable deal with a few small markups (should land in 'Negotiate', near the line)",
+    "document_type": "Retail installment sale contract",
+    "test_inputs": {
+      "credit_tier": "Excellent",
+      "kbb_value_to_enter": 30800
+    },
+    "expected_extraction": {
+      "vehicle": "2023 Subaru Outback Premium AWD",
+      "mileage": 21300,
+      "vehicle_price": 31700.0,
+      "apr": 7.49,
+      "term_months": 66,
+      "down_payment": 4000.0,
+      "trade_in_allowance": 0.0,
+      "trade_in_payoff": 0.0,
+      "monthly_payment": 582.02,
+      "amount_financed": 31405.0,
+      "total_of_payments": 38413.32,
+      "fees": [
+        {
+          "name": "Documentary Fee",
+          "amount": 599.0
+        }
+      ],
+      "add_ons": [
+        {
+          "name": "GAP Waiver",
+          "amount": 650.0
+        },
+        {
+          "name": "VIN Etching",
+          "amount": 199.0
+        }
+      ],
+      "taxes_and_government_fees": {
+        "tavt": 2219.0,
+        "title": 18.0,
+        "tag": 20.0
+      }
+    },
+    "expected_flags": [
+      "APR 7.49% slightly above typical for Excellent credit",
+      "Price ~$900 above market (KBB $30,800)",
+      "VIN etching",
+      "GAP slightly high"
+    ],
+    "notes": "Near the Fair/Negotiate boundary. Tests small flags adding up correctly."
   }
 ]
