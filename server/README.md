@@ -93,4 +93,4 @@ Response:
 
 Start at 100, subtract 1 point per $100 of avoidable cost, max 25 points per flag, floor 0. Thresholds, typical prices, and sources are in `data/lookups.js`.
 
-Before the pitch, replace the placeholder APR figures in `data/lookups.js` with the numbers from the latest Experian report.
+APR averages are Experian Q2 2026 used-vehicle figures; an APR is flagged when it is more than 0.5 points above the average for the buyer's tier.

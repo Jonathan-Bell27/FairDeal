@@ -1,23 +1,22 @@
 // Lookup tables for the rules engine. Kept in code so the engine runs with no
 // database; move to Supabase later if you want to edit them without a deploy.
 //
-// TODO before the pitch: replace the APR numbers with the exact figures from the
-// latest Experian "State of the Automotive Finance Market" report and update
-// APR_SOURCE. The values below are rounded placeholders in that report's range.
+// APR figures: Experian, Q2 2026, average used-vehicle APR by VantageScore 4.0
+// tier (experian.com/blogs/ask-experian/used-car-loan-rates/).
 
 export const APR_SOURCE =
-  "Experian, State of the Automotive Finance Market (average used-vehicle APR by credit tier)";
+  "Experian, State of the Automotive Finance Market, Q2 2026 (average used-vehicle APR by credit tier)";
 
-// FairDeal tier -> Experian tier, and the typical used-vehicle APR (%).
+// FairDeal tier -> Experian tier, and the average used-vehicle APR (%).
 export const TYPICAL_APR = {
-  Excellent: { experianTier: "Super prime (781+)", apr: 6.5 },
-  Good: { experianTier: "Prime (661-780)", apr: 8.0 },
-  Fair: { experianTier: "Near prime (601-660)", apr: 12.0 },
-  Poor: { experianTier: "Subprime (501-600)", apr: 17.0 },
+  Excellent: { experianTier: "Super prime (781-850)", apr: 6.29 },
+  Good: { experianTier: "Prime (661-780)", apr: 8.81 },
+  Fair: { experianTier: "Near prime (601-660)", apr: 13.93 },
+  Poor: { experianTier: "Subprime (501-600)", apr: 19.1 },
 };
 
-// Flag an APR only when it beats the typical rate by more than this many points.
-export const APR_TOLERANCE = 1.0;
+// Flag an APR only when it beats the average by more than this many points.
+export const APR_TOLERANCE = 0.5;
 
 // Add-ons and dealer fees. `fair` is what the item typically costs elsewhere
 // (0 = shouldn't be charged at all); `flagAbove` is the price that triggers a flag.
