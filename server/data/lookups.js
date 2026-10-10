@@ -62,10 +62,11 @@ export const ADD_ONS = [
     key: "paint_protection",
     label: "Paint / fabric protection",
     match: /paint|fabric|sealant|ceramic|pro.?shield|appearance/i,
-    fair: 200,
+    // Fabric figures from the source; paint coatings aren't covered by it.
+    fair: 300,
     flagAbove: 400,
-    why: "Dealer paint and fabric coatings are heavily marked up. Retail products cost a fraction of this.",
-    source: "Typical retail cost of paint sealant and fabric protection products",
+    why: "A professional detailer charges about $300 for fabric protection, and even dealers usually top out around $400. A $5 can of fabric protector does much of the same job.",
+    source: "UsedCars.com, Is Car Fabric Protection Worth the Cost? (Oct 2025)",
   },
   {
     key: "gap",
