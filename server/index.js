@@ -56,12 +56,12 @@ app.post("/extract", upload.single("file"), async (req, res) => {
   }
 });
 
-// JSON body: { deal, credit_tier, kbb_value }. Returns score, flags, savings, counteroffer.
+// JSON body: { deal, credit_tier, kbb_value, lang? ("en" | "es") }. Returns score, flags, savings, counteroffer.
 app.post("/analyze", (req, res) => {
-  const { deal, credit_tier, kbb_value } = req.body ?? {};
+  const { deal, credit_tier, kbb_value, lang } = req.body ?? {};
   if (!deal || typeof deal !== "object") return res.status(400).json({ error: "Missing deal." });
   try {
-    res.json(analyze(deal, { creditTier: credit_tier, kbbValue: kbb_value }));
+    res.json(analyze(deal, { creditTier: credit_tier, kbbValue: kbb_value, lang }));
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

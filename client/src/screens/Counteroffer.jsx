@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useT } from "../i18n.js";
 
 export default function Counteroffer({ text: initialText, onBack }) {
+  const c = useT().counter;
   const [text, setText] = useState(initialText);
   const [copied, setCopied] = useState(false);
 
@@ -21,14 +23,14 @@ export default function Counteroffer({ text: initialText, onBack }) {
 
   return (
     <section className="screen">
-      <p className="eyebrow">Step 3 of 3</p>
-      <h1>Your counteroffer</h1>
-      <p className="lede">Edit anything you like, then text it to the dealer or copy it.</p>
+      <p className="eyebrow">{c.eyebrow}</p>
+      <h1>{c.title}</h1>
+      <p className="lede">{c.lede}</p>
 
       <div className="sheet letter">
         <textarea
           className="counter-text"
-          aria-label="Counteroffer message"
+          aria-label={c.label}
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={14}
@@ -40,13 +42,13 @@ export default function Counteroffer({ text: initialText, onBack }) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
-          Text it to the dealer
+          {c.text}
         </a>
         <button className="btn" onClick={copy}>
-          {copied ? "Copied ✓" : "Copy message"}
+          {copied ? c.copied : c.copy}
         </button>
         <button className="link" onClick={onBack}>
-          Back to the markup
+          {c.back}
         </button>
       </div>
     </section>

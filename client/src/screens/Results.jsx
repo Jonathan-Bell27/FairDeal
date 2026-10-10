@@ -1,15 +1,9 @@
 import { usd } from "../format.js";
-import { PenCircle } from "../Pen.jsx";
-
-const STAMP = { fair: "Fair deal", negotiate: "Negotiate", walk: "Walk away" };
-
-const VERDICT_SUB = {
-  fair: "Rate, price, term and fees check out.",
-  negotiate: "Fix these before you sign.",
-  walk: "Don't sign this as written.",
-};
+import { useT } from "../i18n.js";
+import Dial from "../Dial.jsx";
 
 export default function Results({ result, onEdit, onCounter }) {
+  const t = useT().results;
   const { score, verdict, total_savings, flags, disclaimer } = result;
   // Red flags first, biggest dollar amount first; cautions after.
   const lines = [...flags].sort(
@@ -18,35 +12,31 @@ export default function Results({ result, onEdit, onCounter }) {
 
   return (
     <section className="screen">
-      <p className="eyebrow">Your deal, marked up</p>
+      <p className="eyebrow">{t.eyebrow}</p>
 
       <div className="sheet verdict-sheet">
-        <div className={`score-mark ${verdict.key}`}>
-          <PenCircle />
-          <div className={`score ${score >= 100 ? "long" : ""}`}>
-            {score}
-            <small>OF 100</small>
-          </div>
+        <Dial score={score} verdict={verdict.key} label={t.dialLabel(score)} ofText={t.scoreOf} />
+        <div className="verdict-text">
+          <div className={`stamp ${verdict.key}`}>{t.stamp[verdict.key] ?? verdict.label}</div>
+          <div className="verdict-sub">{t.sub[verdict.key]}</div>
         </div>
-        <div className={`stamp ${verdict.key}`}>{STAMP[verdict.key] ?? verdict.label}</div>
-        <div className="verdict-sub">{VERDICT_SUB[verdict.key]}</div>
         {total_savings > 0 ? (
-          <div className="keep">{usd(total_savings)} you could keep</div>
+          <div className="keep">{t.keep(usd(total_savings))}</div>
         ) : (
-          <div className="keep fair">Nothing to mark up ✓</div>
+          <div className="keep fair">{t.clean}</div>
         )}
       </div>
 
       {lines.length > 0 && (
         <>
-          <h2 className="section-title">What we marked · tap a line for why</h2>
+          <h2 className="section-title">{t.marked}</h2>
           <div className="sheet receipt">
             {lines.map((f, i) => (
-              <Line key={f.id} flag={f} index={i} />
+              <Line key={f.id} flag={f} index={i} t={t} />
             ))}
             {total_savings > 0 && (
               <div className="total">
-                <span>You could keep</span>
+                <span>{t.total}</span>
                 <strong>{usd(total_savings)}</strong>
               </div>
             )}
@@ -54,13 +44,12 @@ export default function Results({ result, onEdit, onCounter }) {
         </>
       )}
 
-
       <div className="actions">
         <button className="btn red big" onClick={onCounter}>
-          {flags.length ? "Write my counteroffer" : "Write a message to the dealer"}
+          {flags.length ? t.counter : t.message}
         </button>
         <button className="btn" onClick={onEdit}>
-          Edit the numbers
+          {t.edit}
         </button>
       </div>
 
@@ -69,7 +58,7 @@ export default function Results({ result, onEdit, onCounter }) {
   );
 }
 
-function Line({ flag, index }) {
+function Line({ flag, index, t }) {
   // Fallback for responses from an older server without `line`.
   const line = flag.line ?? { label: flag.title, charged: "", note: "", strike: false };
   const scored = flag.severity === "red";
@@ -92,13 +81,15 @@ function Line({ flag, index }) {
           </span>
           {scored && flag.dollar_impact > 0 && <span className="impact">−{usd(flag.dollar_impact)}</span>}
         </div>
-        <div className="line-more">{scored ? "Why?" : "Not counted in your score · Why?"}</div>
+        <div className="line-more">{scored ? t.why : t.notCounted}</div>
       </summary>
       <div className="line-detail">
         <p>
           <strong>{flag.title}.</strong> {flag.detail}
         </p>
-        <p className="source">Source: {flag.source}</p>
+        <p className="source">
+          {t.source}: {flag.source}
+        </p>
       </div>
     </details>
   );

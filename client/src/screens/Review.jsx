@@ -1,33 +1,31 @@
 import { CREDIT_TIERS } from "../api.js";
+import { useT } from "../i18n.js";
 
-// Also the manual entry form: it starts from an empty deal.
+// Also the manual entry form: it starts from an empty deal. Labels live in i18n.js.
 const FIELDS = [
-  ["Vehicle", [
-    ["vehicle", "Vehicle", "text"],
-    ["mileage", "Mileage", "number"],
-    ["vehicle_price", "Vehicle price ($)", "number"],
-  ]],
-  ["Loan", [
-    ["apr", "APR (%)", "number"],
-    ["term_months", "Term (months)", "number"],
-    ["monthly_payment", "Monthly payment ($)", "number"],
-    ["down_payment", "Down payment ($)", "number"],
-    ["trade_in_allowance", "Trade-in allowance ($)", "number"],
-    ["trade_in_payoff", "Trade-in payoff ($)", "number"],
-    ["amount_financed", "Amount financed ($)", "number"],
-    ["total_of_payments", "Total of payments ($)", "number"],
-  ]],
+  ["Vehicle", [["vehicle", "text"], ["mileage", "number"], ["vehicle_price", "number"]]],
+  [
+    "Loan",
+    [
+      ["apr", "number"],
+      ["term_months", "number"],
+      ["monthly_payment", "number"],
+      ["down_payment", "number"],
+      ["trade_in_allowance", "number"],
+      ["trade_in_payoff", "number"],
+      ["amount_financed", "number"],
+      ["total_of_payments", "number"],
+    ],
+  ],
 ];
 
-const LISTS = [
-  ["fees", "Dealer fees", "e.g. Doc fee"],
-  ["add_ons", "Add-ons & protection products", "e.g. GAP, VIN etching"],
-  ["taxes_and_government_fees", "Taxes & government fees", "e.g. Sales tax"],
-];
+const LISTS = ["fees", "add_ons", "taxes_and_government_fees"];
 
 export default function Review({
   deal, setDeal, creditTier, setCreditTier, kbbValue, setKbbValue, note, onAnalyze, analyzing, error,
 }) {
+  const t = useT();
+  const r = t.review;
   const set = (key, value) => setDeal({ ...deal, [key]: value });
   const setItem = (list, i, key, value) =>
     set(list, deal[list].map((item, j) => (j === i ? { ...item, [key]: value } : item)));
@@ -40,34 +38,36 @@ export default function Review({
 
   return (
     <section className="screen">
-      <p className="eyebrow">Step 2 of 3</p>
-      <h1>Check the numbers</h1>
-      <p className="lede">{note || "Enter what's on your buyer's order or loan offer. Leave blank anything you don't see."}</p>
+      <p className="eyebrow">{r.eyebrow}</p>
+      <h1>{r.title}</h1>
+      <p className="lede">{note || r.lede}</p>
 
       <div className="card">
         <div className="row">
           <label className="field">
-            <span>Your credit</span>
+            <span>{t.upload.credit}</span>
             <select value={creditTier} onChange={(e) => setCreditTier(e.target.value)}>
-              {CREDIT_TIERS.map((t) => (
-                <option key={t}>{t}</option>
+              {CREDIT_TIERS.map((tier) => (
+                <option key={tier} value={tier}>
+                  {t.tiers[tier]}
+                </option>
               ))}
             </select>
           </label>
           <label className="field">
-            <span>KBB value ($)</span>
-            <input inputMode="decimal" value={kbbValue} onChange={(e) => setKbbValue(e.target.value)} placeholder="optional" />
+            <span>{r.kbb}</span>
+            <input inputMode="decimal" value={kbbValue} onChange={(e) => setKbbValue(e.target.value)} placeholder={r.optional} />
           </label>
         </div>
       </div>
 
       {FIELDS.map(([title, fields]) => (
         <div className="card" key={title}>
-          <h3>{title}</h3>
+          <h3>{r.groups[title]}</h3>
           <div className="grid">
-            {fields.map(([key, label, type]) => (
+            {fields.map(([key, type]) => (
               <label className={`field ${key === "vehicle" ? "wide" : ""}`} key={key}>
-                <span>{label}</span>
+                <span>{r.fields[key]}</span>
                 <input
                   inputMode={type === "number" ? "decimal" : "text"}
                   value={shown(deal[key])}
@@ -79,20 +79,20 @@ export default function Review({
         </div>
       ))}
 
-      {LISTS.map(([list, title, placeholder]) => (
+      {LISTS.map((list) => (
         <div className="card" key={list}>
-          <h3>{title}</h3>
-          {deal[list].length === 0 && <p className="muted small">None listed.</p>}
+          <h3>{r.lists[list][0]}</h3>
+          {deal[list].length === 0 && <p className="muted small">{r.none}</p>}
           {deal[list].map((item, i) => (
             <div className="item-row" key={i}>
               <input
-                aria-label="Item name"
-                placeholder={placeholder}
+                aria-label={r.itemName}
+                placeholder={r.lists[list][1]}
                 value={item.name}
                 onChange={(e) => setItem(list, i, "name", e.target.value)}
               />
               <input
-                aria-label="Amount"
+                aria-label={r.amount}
                 className="amount"
                 inputMode="decimal"
                 placeholder="$"
@@ -101,8 +101,8 @@ export default function Review({
               />
               <button
                 className="icon"
-                aria-label={`Remove ${item.name || "this item"}`}
-                data-tooltip="Remove item"
+                aria-label={r.removeNamed(item.name)}
+                data-tooltip={r.remove}
                 onClick={() => removeItem(list, i)}
               >
                 ×
@@ -110,7 +110,7 @@ export default function Review({
             </div>
           ))}
           <button className="link" onClick={() => addItem(list)}>
-            + Add item
+            {r.add}
           </button>
         </div>
       ))}
@@ -123,7 +123,7 @@ export default function Review({
 
       <div className="actions sticky">
         <button className="btn primary big" onClick={onAnalyze} disabled={analyzing || !canAnalyze}>
-          {analyzing ? "Checking…" : canAnalyze ? "Check this deal" : "Enter the vehicle price to continue"}
+          {analyzing ? r.checking : canAnalyze ? r.check : r.needPrice}
         </button>
       </div>
     </section>

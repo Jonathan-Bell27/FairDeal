@@ -1,9 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { CREDIT_TIERS, extractDeal } from "../api.js";
+import { LangContext, useT } from "../i18n.js";
 import { prepareUpload } from "../image.js";
 import { PenCircle } from "../Pen.jsx";
 
 export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValue, onExtracted, onManual }) {
+  const lang = useContext(LangContext);
+  const t = useT();
+  const u = t.upload;
   const cameraInput = useRef(null);
   const fileInput = useRef(null);
   const [busy, setBusy] = useState(false);
@@ -25,7 +29,7 @@ export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValu
     setBusy(true);
     setError("");
     try {
-      const { deal, ms } = await extractDeal(await prepareUpload(file));
+      const { deal, ms } = await extractDeal(await prepareUpload(file), lang);
       onExtracted(deal, ms);
     } catch (err) {
       setError(err.message);
@@ -37,11 +41,9 @@ export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValu
   if (busy) {
     return (
       <section className="screen" aria-busy="true" aria-live="polite">
-        <p className="eyebrow">Step 1 of 3</p>
-        <h1>Reading your contract…</h1>
-        <p className="lede">
-          {slow ? "Still working. The server may be waking up, which can take up to a minute." : "This usually takes a few seconds."}
-        </p>
+        <p className="eyebrow">{u.readingEyebrow}</p>
+        <h1>{u.reading}</h1>
+        <p className="lede">{slow ? u.readingSlow : u.readingFast}</p>
         <ReviewSkeleton />
       </section>
     );
@@ -49,40 +51,39 @@ export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValu
 
   return (
     <section className="screen">
-      <p className="eyebrow">Car deal checker</p>
+      <p className="eyebrow">{u.eyebrow}</p>
       <h1>
-        Is this car deal{" "}
+        {u.titleBefore}{" "}
         <span className="circled">
-          fair
+          {u.titleCircled}
           <PenCircle />
         </span>
-        ?
+        {u.titleAfter ? ` ${u.titleAfter}` : ""}?
       </h1>
-      <p className="lede">
-        Snap your buyer's order or loan offer. We'll mark up the junk fees, padded add-ons and inflated rate, then write
-        your counteroffer.
-      </p>
+      <p className="lede">{u.lede}</p>
 
       <div className="card">
         <label className="field">
-          <span>Your credit</span>
+          <span>{u.credit}</span>
           <select value={creditTier} onChange={(e) => setCreditTier(e.target.value)}>
-            {CREDIT_TIERS.map((t) => (
-              <option key={t}>{t}</option>
+            {CREDIT_TIERS.map((tier) => (
+              <option key={tier} value={tier}>
+                {t.tiers[tier]}
+              </option>
             ))}
           </select>
         </label>
         <label className="field">
           <span>
-            Kelley Blue Book value <em>(optional)</em>
+            {u.kbb} <em>{u.optional}</em>
           </span>
           <input
             inputMode="decimal"
-            placeholder="e.g. 19,800"
+            placeholder={u.kbbPlaceholder}
             value={kbbValue}
             onChange={(e) => setKbbValue(e.target.value)}
           />
-          <small className="hint">Look up the car on kbb.com so we can check the price.</small>
+          <small className="hint">{u.kbbHint}</small>
         </label>
       </div>
 
@@ -98,20 +99,20 @@ export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValu
             <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
             <circle cx="12" cy="13" r="4" />
           </svg>
-          Snap your contract
+          {u.snap}
         </button>
         <button className="btn" onClick={() => fileInput.current.click()}>
-          Upload a photo or PDF
+          {u.upload}
         </button>
         <button className="link" onClick={onManual}>
-          Enter the terms manually instead
+          {u.manual}
         </button>
       </div>
 
       <div className="trust">
-        <span>Rates from Experian</span>
-        <span>Prices from Consumer Reports</span>
-        <span>We don't store your photo</span>
+        {u.trust.map((line) => (
+          <span key={line}>{line}</span>
+        ))}
       </div>
 
       <input ref={cameraInput} type="file" accept="image/*" capture="environment" hidden onChange={handleFile} />

@@ -1,4 +1,5 @@
 // Calls to the FairDeal backend. See server/README.md for the full contract.
+import { STRINGS } from "./i18n.js";
 
 export const API_URL = (import.meta.env.VITE_API_URL || "https://fairdeal-jamn.onrender.com").replace(/\/$/, "");
 
@@ -23,17 +24,18 @@ export const emptyDeal = () => ({
 });
 
 // The free Render server can take ~50s to wake up, so allow plenty of time.
-async function request(path, options = {}, timeoutMs = 90000) {
+async function request(path, options = {}, lang = "en", timeoutMs = 90000) {
+  const errors = (STRINGS[lang] ?? STRINGS.en).errors;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(`${API_URL}${path}`, { ...options, signal: controller.signal });
     const body = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(body.error || `Request failed (${res.status})`);
+    if (!res.ok) throw new Error(body.error || errors.failed(res.status));
     return body;
   } catch (err) {
-    if (err.name === "AbortError") throw new Error("The server took too long to respond. Try again or enter the terms manually.");
-    if (err instanceof TypeError) throw new Error("Couldn't reach the server. Check your connection and try again.");
+    if (err.name === "AbortError") throw new Error(errors.timeout);
+    if (err instanceof TypeError) throw new Error(errors.network);
     throw err;
   } finally {
     clearTimeout(timer);
@@ -45,16 +47,20 @@ export function wakeServer() {
   fetch(`${API_URL}/health`).catch(() => {});
 }
 
-export function extractDeal(file) {
+export function extractDeal(file, lang) {
   const form = new FormData();
   form.append("file", file);
-  return request("/extract", { method: "POST", body: form });
+  return request("/extract", { method: "POST", body: form }, lang);
 }
 
-export function analyzeDeal(deal, creditTier, kbbValue) {
-  return request("/analyze", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ deal, credit_tier: creditTier, kbb_value: kbbValue }),
-  });
+export function analyzeDeal(deal, creditTier, kbbValue, lang) {
+  return request(
+    "/analyze",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ deal, credit_tier: creditTier, kbb_value: kbbValue, lang }),
+    },
+    lang,
+  );
 }
