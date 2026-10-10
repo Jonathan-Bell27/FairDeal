@@ -26,7 +26,9 @@ export default function Chat({ mode, ctx, messages, setMessages, feedback, setFe
     },
     [], // eslint-disable-line react-hooks/exhaustive-deps
   );
-  useEffect(() => endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" }), [messages, feedback, busy]);
+  useEffect(() => {    
+    endRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  },[messages, feedback, busy]);
 
   // Send the conversation so far and stream Claude's reply into a new message.
   const run = (history) => {

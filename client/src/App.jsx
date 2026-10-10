@@ -37,8 +37,11 @@ export default function App() {
   const [theme, setTheme] = useState(initialTheme);
   const t = STRINGS[lang];
 
-  useEffect(wakeServer, []);
-  useEffect(() => window.scrollTo(0, 0), [screen]);
+  useEffect(() => {
+    wakeServer();
+  }, []);
+  useEffect(() => {window.scrollTo(0, 0);
+  }, [screen]);
   useEffect(() => {
     saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats });
   }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats]);
