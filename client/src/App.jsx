@@ -49,23 +49,11 @@ export default function App() {
   const [theme, setTheme] = useState(initialTheme);
   const t = STRINGS[lang];
 
-<<<<<<< HEAD
   useEffect(() => {
     wakeServer();
   }, []);
   useEffect(() => {window.scrollTo(0, 0);
   }, [screen]);
-=======
-  useEffect(wakeServer, []);
-  // A share link pasted into a tab that already has FairDeal open only changes
-  // the #fragment, so reload to open it.
-  useEffect(() => {
-    const onHash = () => sharedCodeInUrl() && location.reload();
-    window.addEventListener("hashchange", onHash);
-    return () => window.removeEventListener("hashchange", onHash);
-  }, []);
-  useEffect(() => window.scrollTo(0, 0), [screen]);
->>>>>>> origin/main
   useEffect(() => {
     if (screen === "opening") return;
     saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared, finePrint });

@@ -82,9 +82,6 @@ export const STRINGS = {
       keep: (amount) => `${amount} could be saved`,
       clean: "Nothing to mark up ✓",
       marked: "What we marked · tap a line for why",
-<<<<<<< HEAD
-      total: "You could save",
-=======
       total: "You could keep",
       overlap: "Counted twice above: a fair rate and a shorter loan save some of the same interest",
       share: "Get a second opinion",
@@ -101,7 +98,6 @@ export const STRINGS = {
         total: "Itemized total",
         note: "Uses the KBB price, typical prices, the typical rate for your credit and a 60-month term wherever we marked a problem. It's a target to negotiate toward, not a promise.",
       },
->>>>>>> origin/main
       why: "Why?",
       notCounted: "Not counted in your score · Why?",
       source: "Source",
