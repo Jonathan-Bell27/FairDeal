@@ -1319,8 +1319,73 @@ textarea {
   white-space: nowrap;
 }
 
+/* ---------- Fix-It Mode ---------- */
+.fix-toggle {
+  margin: -2px 0 14px;
+}
+.fix-toggle.on {
+  border-color: var(--g-green-text);
+  color: var(--g-green-text);
+}
+.fix-summary {
+  align-self: stretch;
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--rule);
+}
+.fix-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  font-size: 0.95rem;
+}
+.fix-row > span:last-child {
+  font-family: var(--mono);
+  white-space: nowrap;
+}
+.fix-row s {
+  color: var(--muted);
+  text-decoration-color: var(--red);
+  text-decoration-thickness: 2px;
+}
+.fix-row strong {
+  font-size: 1.1rem;
+  color: var(--g-green-text);
+}
+.fix-note {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+}
+.line.fixing .charged.strike::after {
+  animation-delay: calc(0.15s + var(--i, 0) * 0.12s);
+}
+.fixed-to {
+  font-family: var(--pen);
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--g-green-text);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(4px);
+  animation: fix-in 0.35s ease-out forwards;
+  animation-delay: calc(0.3s + var(--i, 0) * 0.12s);
+}
+@keyframes fix-in {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .research-log li.active .log-mark,
+  .fixed-to,
   .caret,
   .dial.landed .dial-zone.active,
   .dial.landed .dial-burst,
@@ -1338,5 +1403,9 @@ textarea {
   }
   .charged.strike::after {
     transform: rotate(-4deg);
+  }
+  .fixed-to {
+    opacity: 1;
+    transform: none;
   }
 }

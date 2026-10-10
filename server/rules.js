@@ -265,7 +265,71 @@ export function buildCounteroffer(deal, flags, lang = "en") {
   return [m.counterIntro(car), "", ...asks.map((a) => `- ${a}`), "", m.counterOutro].join("\n");
 }
 
-export function analyze(rawDeal, { creditTier, kbbValue, lang = "en" } = {}) {
+// The same deal with every scored line fixed: the KBB price, typical prices
+// for overpriced items, the typical APR, a 60-month term, and none of the
+// money the itemized lines don't explain. It is scored by these same rules, so
+// Fix-It Mode shows a real result rather than a guess. Each scored flag's line
+// gets `fixed`, the value it becomes.
+function fairDeal(deal, creditTier, kbb, flags, lang, m) {
+  const red = flags.filter((f) => f.severity === "red");
+  if (!red.length) return null;
+  const has = (id) => red.some((f) => f.id === id);
+  const typical = TYPICAL_APR[creditTier].apr;
+  const fixed = structuredClone(deal);
+  const itemFix = new Map(); // item name -> typical price
+  let cut = 0;
+
+  if (has("price")) {
+    cut += deal.vehicle_price - kbb;
+    fixed.vehicle_price = kbb;
+  }
+  for (const list of ["fees", "add_ons"]) {
+    fixed[list] = deal[list].map((item) => {
+      const rule = ADD_ONS.find((r) => r.match.test(item.name));
+      if (!rule || rule.financed || !red.some((f) => f.line?.label === item.name)) return item;
+      itemFix.set(item.name, rule.fair);
+      cut += item.amount - rule.fair;
+      return { ...item, amount: rule.fair };
+    });
+  }
+  cut += red.find((f) => f.id === "unexplained_amount")?.dollar_impact ?? 0;
+  if (has("apr")) fixed.apr = typical;
+  if (has("term")) fixed.term_months = 60;
+
+  // Financed deals keep the contract's amount financed minus the fixes, so
+  // rebates the lines don't show still count. The payment is recomputed.
+  const financed = deal.amount_financed > 0 && deal.term_months > 0;
+  fixed.amount_financed = financed ? Math.max(0, round2(deal.amount_financed - cut)) : 0;
+  fixed.monthly_payment = 0;
+  fixed.total_of_payments = 0;
+  const after = analyze(fixed, { creditTier, kbbValue: kbb, lang, fair: false });
+
+  for (const f of red) {
+    let to = m.fixedExplain;
+    if (f.id === "price") to = usd(kbb);
+    else if (f.id === "apr") to = `${typical}%`;
+    else if (f.id === "term") to = m.fixedTerm(60);
+    else if (itemFix.has(f.line?.label)) to = itemFix.get(f.line.label) ? usd(itemFix.get(f.line.label)) : m.fixedRemoved;
+    f.line = { ...f.line, fixed: to };
+  }
+
+  const itemsTotal = (d) =>
+    d.vehicle_price + [...d.fees, ...d.add_ons, ...d.taxes_and_government_fees].reduce((s, i) => s + i.amount, 0);
+  return {
+    score: after.score,
+    verdict: after.verdict,
+    financed,
+    apr: fixed.apr,
+    term_months: fixed.term_months,
+    monthly_payment: financed ? after.deal.monthly_payment : 0,
+    total_of_payments: financed ? after.deal.total_of_payments : 0,
+    // Cash deals: the itemized total before and after.
+    price_total: round2(itemsTotal(deal)),
+    fair_price_total: round2(itemsTotal(fixed)),
+  };
+}
+
+export function analyze(rawDeal, { creditTier, kbbValue, lang = "en", fair = true } = {}) {
   if (!LANGS.includes(lang)) lang = "en";
   const m = messages(lang);
   if (!CREDIT_TIERS.includes(creditTier)) {
@@ -293,6 +357,7 @@ export function analyze(rawDeal, { creditTier, kbbValue, lang = "en" } = {}) {
     verdict: verdictFor(score, lang),
     total_savings: totalSavings,
     savings_overlap: overlap,
+    fair: fair ? fairDeal(deal, creditTier, kbb, flags, lang, m) : null,
     flags,
     counteroffer: buildCounteroffer(deal, flags, lang),
     deal,

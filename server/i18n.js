@@ -75,6 +75,10 @@ const en = {
     `Hi, thanks for the numbers on ${car}. Everything looks in line with the market, and I'm ready to move forward. Please send the final paperwork.`,
   counterIntro: (car) => `Hi, I'm interested in ${car}, but I need a few changes before I can sign:`,
   counterOutro: "If you can make these changes, I'm ready to move forward today. Please send an updated buyer's order.",
+
+  fixedRemoved: "removed",
+  fixedTerm: (months) => `${months} months`,
+  fixedExplain: "explained or removed",
 };
 
 const es = {
@@ -152,6 +156,10 @@ const es = {
   counterIntro: (car) => `Hola, me interesa el ${car}, pero necesito algunos cambios antes de firmar:`,
   counterOutro:
     "Si pueden hacer estos cambios, puedo cerrar el trato hoy. Por favor, envíenme una orden de compra actualizada.",
+
+  fixedRemoved: "eliminado",
+  fixedTerm: (months) => `${months} meses`,
+  fixedExplain: "explicado o eliminado",
 };
 
 export function messages(lang) {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Speedometer-style score gauge. The needle springs up from 0 (overshooting a
 // little before settling), the number counts up and changes color as it
@@ -32,35 +32,46 @@ const easeOutBack = (p) => {
   const c1 = 1.6;
   return 1 + (c1 + 1) * Math.pow(p - 1, 3) + c1 * Math.pow(p - 1, 2);
 };
-// Low scores still get a visible swing: the needle lifts, then drops back.
-const needleAt = (score, p) => score * easeOutBack(p) + (score < 15 ? 14 * Math.sin(Math.PI * p) * (1 - p) : 0);
+// Low scores still get a visible swing on first load: the needle lifts, then drops back.
+const needleAt = (from, to, p) =>
+  from + (to - from) * easeOutBack(p) + (from === 0 && to < 15 ? 14 * Math.sin(Math.PI * p) * (1 - p) : 0);
 
 const reducedMotion = () => window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
+// On first render the needle swings up from 0; when the score changes later
+// (Fix-It Mode), it swings from where it is to the new score.
 export default function Dial({ score, label, ofText }) {
-  const still = reducedMotion();
-  const [frame, setFrame] = useState(() => (still ? { needle: score, shown: score, landed: true } : { needle: 0, shown: 0, landed: false }));
+  const [frame, setFrame] = useState({ needle: 0, shown: 0, landed: false });
+  const at = useRef({ needle: 0, shown: 0 });
 
   useEffect(() => {
     if (reducedMotion()) return;
     let raf;
-    const start = performance.now() + 300; // let the page settle first
+    const from = at.current;
+    const start = performance.now() + (from.shown === 0 ? 300 : 0); // let the page settle first
     const tick = (now) => {
       const p = Math.min(1, Math.max(0, (now - start) / SWEEP_MS));
-      setFrame({ needle: needleAt(score, p), shown: Math.round(score * easeOutCubic(p)), landed: p >= 1 });
+      const next = {
+        needle: needleAt(from.needle, score, p),
+        shown: Math.round(from.shown + (score - from.shown) * easeOutCubic(p)),
+      };
+      at.current = next;
+      setFrame({ ...next, landed: p >= 1 });
       if (p < 1) raf = requestAnimationFrame(tick);
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [score]);
 
+  // With reduced motion the dial just shows the score.
+  const view = reducedMotion() ? { needle: score, shown: score, landed: true } : frame;
   const final = zoneOf(score);
-  const live = zoneOf(frame.shown);
-  const [nx, ny] = point(frame.needle, R - 26);
+  const live = zoneOf(view.shown);
+  const [nx, ny] = point(view.needle, R - 26);
   const ticks = Array.from({ length: 21 }, (_, i) => i * 5);
 
   return (
-    <div className={`dial ${frame.landed ? "landed" : ""}`} data-zone={final} role="img" aria-label={label}>
+    <div className={`dial ${view.landed ? "landed" : ""}`} data-zone={final} role="img" aria-label={label}>
       <svg viewBox="0 0 240 140" aria-hidden="true">
         {ZONES.map((z) => (
           <path key={z.key} className={`dial-zone ${z.key} ${z.key === final ? "active" : ""}`} d={arc(z.from + 0.8, z.to - 0.8)} />
@@ -79,7 +90,7 @@ export default function Dial({ score, label, ofText }) {
         <circle className="dial-hub-dot" cx={CX} cy={CY} r="3.5" />
       </svg>
       <div className={`dial-number ${live}`}>
-        {frame.shown}
+        {view.shown}
         <small>{ofText}</small>
       </div>
     </div>
