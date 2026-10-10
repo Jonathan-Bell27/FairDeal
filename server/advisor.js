@@ -140,6 +140,7 @@ export async function runAdvisor({ deal, analysis, profile = {}, lang = "en" }, 
   if (process.env.FAIRDEAL_MOCK_AI === "1") return mockAdvisorRun({ deal, analysis, profile, lang }, emit, signal);
 
   const sources = new Map();
+  const searched = new Set(); // one query can run in several steps; show it once
   const addSource = (url, title) => {
     if (typeof url !== "string" || !url.startsWith("http") || sources.has(url)) return;
     sources.set(url, title || url);
@@ -172,7 +173,10 @@ export async function runAdvisor({ deal, analysis, profile = {}, lang = "en" }, 
     stream.on("contentBlock", (block) => {
       if (block.type === "server_tool_use") {
         const query = describeSearch(block);
-        if (query) emit("search", { query });
+        if (query && !searched.has(query)) {
+          searched.add(query);
+          emit("search", { query });
+        }
       }
       if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
         for (const r of block.content) addSource(r.url, r.title);

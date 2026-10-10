@@ -75,3 +75,52 @@ export async function mockAdvisorRun({ deal, analysis, profile, lang }, emit, si
     sources,
   };
 }
+
+const streamWords = async (text, emit, signal) => {
+  for (const word of text.split(/(\s+)/)) {
+    await wait(25, signal);
+    emit("delta", { text: word });
+  }
+};
+
+export async function mockChat({ mode, analysis, messages, lang }, emit, signal) {
+  const es = lang === "es";
+  const turns = (messages ?? []).filter((m) => m.role === "user").length;
+  if (mode === "feedback") {
+    await wait(800, signal);
+    emit("feedback", {
+      mock: true,
+      score: Math.min(9, 5 + turns),
+      summary: es ? "Práctica de ejemplo: te mantuviste firme en varios puntos." : "Sample feedback: you held firm on several points.",
+      went_well: [es ? "Pediste quitar los extras opcionales." : "You asked for the optional add-ons to be removed."],
+      improve: [es ? "Menciona tu preaprobación antes de hablar del pago." : "Mention your pre-approval before talking about the payment."],
+      try_saying: [es ? "Prefiero hablar del precio final, no del pago mensual." : "I'd rather talk about the out-the-door price, not the monthly payment."],
+    });
+    return;
+  }
+  await wait(400, signal);
+  if (mode === "practice") {
+    const first = analysis.flags.find((f) => !["apr", "price", "term", "doc_fee", "dealer_prep"].includes(f.id.replace(/_\d+$/, "")))?.line?.label ?? "GAP Waiver";
+    const lines = es
+      ? [
+          `¡Felicidades por tu auto! Antes de firmar, la mayoría de nuestros clientes agregan ${first}. Son solo unos dólares más al mes.`,
+          "Entiendo. Pero el banco realmente prefiere ver esa protección en el préstamo. ¿Lo dejamos?",
+          "Está bien, lo quito. Esta tasa solo es buena hoy, así que firmemos ahora.",
+        ]
+      : [
+          `Congratulations on the car! Before we sign, most of our customers add the ${first}. It's only a few dollars a month.`,
+          "I hear you. But the bank really likes to see that protection on the loan. Should we keep it?",
+          "Okay, I'll take it off. This rate is only good today, though, so let's get you signed.",
+        ];
+    return streamWords(lines[Math.min(turns, lines.length - 1)], emit, signal);
+  }
+  emit("search", { query: es ? "¿Es obligatorio el seguro GAP para un préstamo de auto?" : "is GAP insurance required for an auto loan" });
+  await wait(700, signal);
+  return streamWords(
+    es
+      ? "Respuesta de ejemplo (modo demo): no, GAP es opcional casi siempre. Puedes decir: \"Prefiero comprar GAP con mi aseguradora; por favor quítenlo del contrato.\""
+      : 'Sample answer (demo mode): no, GAP is almost always optional. You can say: "I\'ll get GAP through my insurer. Please take it off the contract."',
+    emit,
+    signal,
+  );
+}

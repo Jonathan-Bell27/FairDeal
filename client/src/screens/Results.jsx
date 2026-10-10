@@ -2,7 +2,7 @@ import { usd } from "../format.js";
 import { useT } from "../i18n.js";
 import Dial from "../Dial.jsx";
 
-export default function Results({ result, onEdit, onCounter, profile, setProfile, onAdvise, hasReport }) {
+export default function Results({ result, onEdit, onCounter, profile, setProfile, onAdvise, hasReport, onChat, onPractice }) {
   const t = useT().results;
   const { score, verdict, total_savings, flags, disclaimer } = result;
   // Red flags first, biggest dollar amount first; cautions after.
@@ -53,7 +53,16 @@ export default function Results({ result, onEdit, onCounter, profile, setProfile
         </button>
       </div>
 
-      {onAdvise && <DeepDive profile={profile} setProfile={setProfile} onStart={onAdvise} hasReport={hasReport} />}
+      {onAdvise && (
+        <DeepDive
+          profile={profile}
+          setProfile={setProfile}
+          onStart={onAdvise}
+          hasReport={hasReport}
+          onChat={onChat}
+          onPractice={onPractice}
+        />
+      )}
 
       <p className="disclaimer">{disclaimer}</p>
     </section>
@@ -61,7 +70,7 @@ export default function Results({ result, onEdit, onCounter, profile, setProfile
 }
 
 // Optional questions that let Claude tailor the research and plan to this buyer.
-function DeepDive({ profile, setProfile, onStart, hasReport }) {
+function DeepDive({ profile, setProfile, onStart, hasReport, onChat, onPractice }) {
   const t = useT().deep;
   const set = (key) => (e) => setProfile({ ...profile, [key]: e.target.value });
   return (
@@ -100,6 +109,22 @@ function DeepDive({ profile, setProfile, onStart, hasReport }) {
           {hasReport ? t.view : t.start}
         </button>
       </div>
+      {(onChat || onPractice) && (
+        <p className="quick-links">
+          {t.or}{" "}
+          {onChat && (
+            <button className="link" onClick={onChat}>
+              {t.ask}
+            </button>
+          )}
+          {onChat && onPractice && " · "}
+          {onPractice && (
+            <button className="link" onClick={onPractice}>
+              {t.practice}
+            </button>
+          )}
+        </p>
+      )}
     </section>
   );
 }

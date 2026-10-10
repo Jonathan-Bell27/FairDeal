@@ -6,6 +6,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { extractDeal, MODEL, SUPPORTED_TYPES } from "./extract.js";
 import { analyze, CREDIT_TIERS, DISCLAIMER } from "./rules.js";
 import { runAdvisor } from "./advisor.js";
+import { runChat } from "./chat.js";
 import { openStream } from "./sse.js";
 import { rateLimit } from "./limits.js";
 import { dealSchema, emptyDeal } from "./schema.js";
@@ -20,7 +21,7 @@ app.use(cors(origins ? { origin: origins } : {}));
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/", (req, res) => {
-  res.json({ name: "FairDeal API", endpoints: ["GET /health", "GET /config", "POST /extract", "POST /analyze", "POST /advise"] });
+  res.json({ name: "FairDeal API", endpoints: ["GET /health", "GET /config", "POST /extract", "POST /analyze", "POST /advise", "POST /chat"] });
 });
 
 app.get("/health", (req, res) => {
@@ -109,6 +110,45 @@ app.post("/advise", adviseLimit, async (req, res) => {
       const message = err instanceof Anthropic.APIError
         ? `Claude API error (${err.status ?? "network"}). Try again in a moment.`
         : err.message || "Research failed. Try again.";
+      stream.send("error", { error: message });
+    }
+  } finally {
+    stream.send("done", {});
+    stream.end();
+  }
+});
+
+// Follow-up chat. JSON body: { mode: "ask" | "practice" | "feedback", deal, credit_tier,
+// kbb_value, lang?, report?, messages: [{ role, content }] }. Server-sent events:
+// "delta" { text }, "search" { query }, "feedback" {...}, "error" { error }, then "done".
+const chatLimit = rateLimit({
+  max: Number(process.env.CHAT_LIMIT_PER_HOUR || 80),
+  windowMs: 60 * 60 * 1000,
+  message: "You've sent a lot of messages in the last hour. Try again later.",
+});
+app.post("/chat", chatLimit, async (req, res) => {
+  const { mode = "ask", deal, credit_tier, kbb_value, lang, report, messages } = req.body ?? {};
+  if (!["ask", "practice", "feedback"].includes(mode)) return res.status(400).json({ error: "Unknown mode." });
+  if (!deal || typeof deal !== "object") return res.status(400).json({ error: "Missing deal." });
+  let analysis;
+  try {
+    analysis = analyze(deal, { creditTier: credit_tier, kbbValue: kbb_value, lang });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+  const stream = openStream(req, res);
+  try {
+    await runChat(
+      { mode, deal: analysis.deal, analysis, report: report && typeof report === "object" ? report : null, messages, lang: analysis.inputs.lang },
+      stream.send,
+      stream.signal,
+    );
+  } catch (err) {
+    if (!stream.signal.aborted) {
+      console.error("chat failed:", err);
+      const message = err instanceof Anthropic.APIError
+        ? `Claude API error (${err.status ?? "network"}). Try again in a moment.`
+        : err.message || "Something went wrong. Try again.";
       stream.send("error", { error: message });
     }
   } finally {

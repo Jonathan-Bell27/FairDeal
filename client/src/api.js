@@ -111,3 +111,12 @@ export function streamAdvice({ deal, creditTier, kbbValue, lang, profile }, onEv
     { lang, signal },
   );
 }
+
+export function streamChat({ mode, deal, creditTier, kbbValue, lang, report, messages }, onEvent, signal) {
+  return postStream(
+    "/chat",
+    { mode, deal, credit_tier: creditTier, kbb_value: kbbValue, lang, report, messages },
+    onEvent,
+    { lang, signal },
+  );
+}

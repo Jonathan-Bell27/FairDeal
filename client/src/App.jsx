@@ -8,11 +8,12 @@ import Review from "./screens/Review.jsx";
 import Results from "./screens/Results.jsx";
 import Counteroffer from "./screens/Counteroffer.jsx";
 import Advisor from "./screens/Advisor.jsx";
+import Chat from "./screens/Chat.jsx";
 import { PenSquiggle } from "./Pen.jsx";
 
 const saved = loadSession();
 // A results screen can't be restored without its result.
-if (saved && !saved.result && ["results", "counter", "advisor"].includes(saved.screen)) saved.screen = "review";
+if (saved && !saved.result && ["results", "counter", "advisor", "chat", "practice"].includes(saved.screen)) saved.screen = "review";
 
 const hasPrice = (deal) => Number(String(deal.vehicle_price).replace(/[$,]/g, "")) > 0;
 const keyOf = (...inputs) => JSON.stringify(inputs);
@@ -30,6 +31,8 @@ export default function App() {
   const [profile, setProfile] = useState(saved?.profile ?? { zip: "", monthly_income: "", keep_years: "", notes: "" });
   // Claude's research, tagged with the inputs it was run on so edits trigger a fresh run.
   const [advice, setAdvice] = useState(saved?.advice ?? null);
+  // Chat and practice conversations, also tagged with the deal they're about.
+  const [chats, setChats] = useState(saved?.chats ?? null);
   const [lang, setLang] = useState(initialLang);
   const [theme, setTheme] = useState(initialTheme);
   const t = STRINGS[lang];
@@ -37,8 +40,8 @@ export default function App() {
   useEffect(wakeServer, []);
   useEffect(() => window.scrollTo(0, 0), [screen]);
   useEffect(() => {
-    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice });
-  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice]);
+    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats });
+  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -48,6 +51,21 @@ export default function App() {
   }, [theme]);
 
   const adviceKey = keyOf(deal, creditTier, kbbValue, lang, profile);
+  const report = advice?.key === adviceKey ? advice.report : null;
+  // Conversations reset when the deal changes, not when the language does.
+  const chatKey = keyOf(deal, creditTier, kbbValue);
+  const chat = chats?.key === chatKey ? chats : { key: chatKey, ask: [], practice: [], feedback: null };
+  const setChat = (patch) =>
+    setChats((prev) => {
+      const base = prev?.key === chatKey ? prev : { key: chatKey, ask: [], practice: [], feedback: null };
+      const next = typeof patch === "function" ? patch(base) : patch;
+      return { ...base, ...next };
+    });
+  const chatBack = useRef("results");
+  const openChat = (mode) => {
+    chatBack.current = screen;
+    setScreen(mode);
+  };
 
   const toggleLang = () => {
     const next = lang === "en" ? "es" : "en";
@@ -119,6 +137,7 @@ export default function App() {
     setExtractMs(null);
     setResult(null);
     setAdvice(null);
+    setChats(null);
     setError("");
     setScreen("upload");
   };
@@ -200,6 +219,8 @@ export default function App() {
               setProfile={setProfile}
               hasReport={advice?.key === adviceKey}
               onAdvise={() => setScreen("advisor")}
+              onChat={() => openChat("chat")}
+              onPractice={() => openChat("practice")}
             />
           )}
           {screen === "advisor" && result && (
@@ -210,9 +231,26 @@ export default function App() {
               kbbValue={kbbValue}
               lang={lang}
               profile={profile}
-              report={advice?.key === adviceKey ? advice.report : null}
-              setReport={(report) => setAdvice({ key: adviceKey, report })}
+              report={report}
+              setReport={(r) => setAdvice({ key: adviceKey, report: r })}
               onBack={() => setScreen("results")}
+              onChat={() => openChat("chat")}
+              onPractice={() => openChat("practice")}
+            />
+          )}
+          {(screen === "chat" || screen === "practice") && result && (
+            <Chat
+              key={`${screen}:${chatKey}`}
+              mode={screen === "chat" ? "ask" : "practice"}
+              ctx={{ deal, creditTier, kbbValue, lang, report }}
+              messages={screen === "chat" ? chat.ask : chat.practice}
+              setMessages={(m) => {
+                const field = screen === "chat" ? "ask" : "practice";
+                setChat((c) => ({ [field]: typeof m === "function" ? m(c[field]) : m }));
+              }}
+              feedback={chat.feedback}
+              setFeedback={(f) => setChat({ feedback: f })}
+              onBack={() => setScreen(chatBack.current === screen ? "results" : chatBack.current)}
             />
           )}
           {screen === "counter" && result && (

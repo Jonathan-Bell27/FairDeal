@@ -119,6 +119,9 @@ export const STRINGS = {
       privacy: "All questions are optional. Your answers are only used for this research and aren't stored.",
       start: "Research my deal",
       view: "View my plan",
+      or: "Or skip the research:",
+      ask: "Ask a question",
+      practice: "Practice saying no",
     },
 
     advisor: {
@@ -151,6 +154,43 @@ export const STRINGS = {
       ask: "Ask a question about my deal",
       practice: "Practice saying no",
       back: "Back to the markup",
+    },
+
+    chat: {
+      ask: {
+        eyebrow: "Ask FairDeal",
+        title: "Ask about your deal",
+        lede: "Claude knows your contract, the flags and your research, and can look things up.",
+        who: "FairDeal",
+        placeholder: "Ask anything about this deal…",
+        suggestions: [
+          "Is GAP required to get this loan?",
+          "What should my monthly payment be at a fair rate?",
+          "Can I cancel an add-on after I sign?",
+          "Which flag should I fight first?",
+        ],
+      },
+      practice: {
+        eyebrow: "Negotiation practice",
+        title: "Practice saying no",
+        lede: "Claude plays Mike, the finance manager. He'll push the add-ons we flagged. Hold your ground, then get feedback.",
+        who: "Mike (finance manager)",
+        placeholder: "Your reply to Mike…",
+        grade: "How did I do?",
+        grading: "Reviewing…",
+        needTurns: "Reply twice to get feedback",
+        again: "Start over",
+        wentWell: "What went well",
+        improve: "Try next time",
+        trySaying: "Lines to use",
+        mock: "Sample feedback: offline demo mode.",
+      },
+      searched: (q) => `Searched: ${q}`,
+      suggested: "Suggested questions",
+      send: "Send",
+      retry: "Try again",
+      back: "Back",
+      disclaimer: "Answers by Claude. Check important facts before you rely on them. Not financial or legal advice.",
     },
 
     errors: {
@@ -276,6 +316,9 @@ export const STRINGS = {
       privacy: "Todas las preguntas son opcionales. Tus respuestas solo se usan para esta investigación y no se guardan.",
       start: "Investigar mi trato",
       view: "Ver mi plan",
+      or: "O sin investigar:",
+      ask: "Hacer una pregunta",
+      practice: "Practicar decir que no",
     },
 
     advisor: {
@@ -308,6 +351,43 @@ export const STRINGS = {
       ask: "Hacer una pregunta sobre mi trato",
       practice: "Practicar decir que no",
       back: "Volver a las correcciones",
+    },
+
+    chat: {
+      ask: {
+        eyebrow: "Pregúntale a FairDeal",
+        title: "Pregunta sobre tu trato",
+        lede: "Claude conoce tu contrato, las alertas y tu investigación, y puede buscar información.",
+        who: "FairDeal",
+        placeholder: "Pregunta lo que quieras sobre este trato…",
+        suggestions: [
+          "¿Es obligatorio el GAP para este préstamo?",
+          "¿Cuánto debería ser mi pago mensual con una tasa justa?",
+          "¿Puedo cancelar un extra después de firmar?",
+          "¿Qué alerta debo pelear primero?",
+        ],
+      },
+      practice: {
+        eyebrow: "Práctica de negociación",
+        title: "Practica decir que no",
+        lede: "Claude hace de Mike, el gerente de finanzas. Va a insistir con los extras que marcamos. Mantente firme y luego recibe comentarios.",
+        who: "Mike (gerente de finanzas)",
+        placeholder: "Tu respuesta a Mike…",
+        grade: "¿Cómo me fue?",
+        grading: "Revisando…",
+        needTurns: "Responde dos veces para recibir comentarios",
+        again: "Empezar de nuevo",
+        wentWell: "Lo que hiciste bien",
+        improve: "Para la próxima",
+        trySaying: "Frases para usar",
+        mock: "Comentarios de ejemplo: modo demo sin conexión.",
+      },
+      searched: (q) => `Buscó: ${q}`,
+      suggested: "Preguntas sugeridas",
+      send: "Enviar",
+      retry: "Intentar de nuevo",
+      back: "Volver",
+      disclaimer: "Respuestas de Claude. Verifica los datos importantes antes de confiar en ellos. No es asesoría financiera ni legal.",
     },
 
     errors: {
