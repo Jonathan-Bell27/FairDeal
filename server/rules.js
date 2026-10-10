@@ -130,6 +130,22 @@ function checkAddOns(deal) {
     if (!rule || item.amount <= rule.flagAbove) continue;
     const id = seen.has(rule.key) ? `${rule.key}_${seen.size}` : rule.key;
     seen.add(rule.key);
+    if (rule.financed) {
+      const interest = monthlyPayment(item.amount, deal.apr, deal.term_months) * deal.term_months - item.amount;
+      flags.push(
+        flag({
+          id,
+          category: "Add-ons and fees",
+          title: `${item.name}: ${usd(item.amount)}, plus about ${usd(interest)} in interest`,
+          detail: `${rule.why} Rolled into this loan at ${deal.apr}% for ${deal.term_months} months, it would cost about ${usd(interest)} in interest. You can pay for it separately or buy coverage later.`,
+          impact: interest,
+          source: rule.source,
+          scored: false,
+          ask: `Take the ${item.name} (${usd(item.amount)}) off the loan. I can buy coverage separately if I want it.`,
+        }),
+      );
+      continue;
+    }
     const impact = item.amount - rule.fair;
     const remove = rule.fair === 0;
     flags.push(

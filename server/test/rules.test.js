@@ -50,6 +50,10 @@ test("02 predatory: every flag, Walk away", () => {
   ]);
   assert.equal(r.verdict.key, "walk");
   assert.ok(r.total_savings > 10000, `savings ${r.total_savings}`);
+  const sc = r.flags.find((f) => f.id === "service_contract");
+  assert.equal(sc.severity, "caution");
+  assert.equal(sc.points, 0);
+  assert.match(sc.title, /in interest/);
 });
 
 test("03 borderline: Negotiate", () => {

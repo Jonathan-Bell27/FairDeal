@@ -37,8 +37,8 @@ export const ADD_ONS = [
     match: /nitrogen/i,
     fair: 0,
     flagAbove: 0,
-    why: "Air is already 78% nitrogen. Many tire shops fill for free.",
-    source: "Consumer Reports, nitrogen tire inflation testing",
+    why: "Air is already mostly nitrogen, and all tires lose pressure over time no matter what's inside. Consumer Reports has seen dealers try to charge up to $400 for this.",
+    source: "Consumer Reports, Just Say No to These Car Dealership Extras (Apr 2026)",
   },
   {
     key: "dealer_prep",
@@ -55,18 +55,18 @@ export const ADD_ONS = [
     match: /vin.?etch|etch|theft.?deter/i,
     fair: 20,
     flagAbove: 100,
-    why: "A DIY VIN etching kit costs about $20 and can do more than one car. Dealers charge up to $400 for the same thing.",
-    source: "GoodCar, What Is VIN Etching? (Oct 2024), citing MotorBiscuit",
+    why: "Consumer Reports calls VIN etching unnecessary: the VIN is already stamped in several places on every car. Dealers typically charge $200 to $300, and a DIY kit costs about $20.",
+    source: "Consumer Reports, Just Say No to These Car Dealership Extras (Apr 2026); GoodCar (DIY kit price)",
   },
   {
     key: "paint_protection",
     label: "Paint / fabric protection",
     match: /paint|fabric|sealant|ceramic|pro.?shield|appearance/i,
-    // Fabric figures from the source; paint coatings aren't covered by it.
+    // Flag above CR's typical dealer price; fair = professional detailer price.
     fair: 300,
-    flagAbove: 400,
-    why: "A professional detailer charges about $300 for fabric protection, and even dealers usually top out around $400. A $5 can of fabric protector does much of the same job.",
-    source: "UsedCars.com, Is Car Fabric Protection Worth the Cost? (Oct 2025)",
+    flagAbove: 600,
+    why: "Consumer Reports says today's paint and fabrics last a decade or longer with regular cleaning, so this isn't necessary. CR's shoppers typically see dealers charge about $600, and a professional detailer charges about $300 for fabric protection.",
+    source: "Consumer Reports, Just Say No to These Car Dealership Extras (Apr 2026); UsedCars.com (detailer price)",
   },
   {
     key: "gap",
@@ -83,10 +83,13 @@ export const ADD_ONS = [
     key: "service_contract",
     label: "Extended warranty / service contract",
     match: /service contract|extended|warranty|powertrain|vsc|protection plan/i,
-    fair: 1500,
-    flagAbove: 1800,
-    why: "Service contracts carry large dealer markups. The price is negotiable, and you can buy one later.",
-    source: "Typical dealer markup on vehicle service contracts",
+    // Fair prices vary too much to call one overpriced; instead show the
+    // interest paid on it when it's rolled into the loan (not scored).
+    financed: true,
+    fair: 0,
+    flagAbove: 0,
+    why: "This is optional. Consumer Reports notes a service contract can easily add $2,000 or more, and financing it costs even more because you pay interest on it.",
+    source: "Consumer Reports, Just Say No to These Car Dealership Extras (Apr 2026); interest from the contract's APR and term",
   },
   {
     key: "tire_wheel",
