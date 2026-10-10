@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { analyzeDeal, emptyDeal, wakeServer } from "./api.js";
+import { analyzeDeal, emptyDeal, explainFinePrint, wakeServer } from "./api.js";
 import { clearSession, loadSession, saveSession } from "./session.js";
 import { LangContext, STRINGS } from "./i18n.js";
 import { initialLang, initialTheme, setPref } from "./prefs.js";
 import Upload from "./screens/Upload.jsx";
 import Review from "./screens/Review.jsx";
 import Results from "./screens/Results.jsx";
+import { FinePrintProvider } from "./screens/FinePrint.jsx";
 import Counteroffer from "./screens/Counteroffer.jsx";
 import Advisor from "./screens/Advisor.jsx";
 import Chat from "./screens/Chat.jsx";
@@ -40,6 +41,10 @@ export default function App() {
   const [chats, setChats] = useState(saved?.chats ?? null);
   // True when this deal came from someone else's share link.
   const [shared, setShared] = useState(Boolean(sharedDeal) || (saved?.shared ?? false));
+  // Fine print read from the current upload: { status: "loading" | "done" | "error", data, lang }.
+  // A read still loading when the page reloaded is gone, so only a finished one is restored.
+  const [finePrint, setFinePrint] = useState(saved?.finePrint?.status === "done" ? saved.finePrint : null);
+  const finePrintRun = useRef(0);
   const [lang, setLang] = useState(initialLang);
   const [theme, setTheme] = useState(initialTheme);
   const t = STRINGS[lang];
@@ -55,8 +60,8 @@ export default function App() {
   useEffect(() => window.scrollTo(0, 0), [screen]);
   useEffect(() => {
     if (screen === "opening") return;
-    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared });
-  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared]);
+    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared, finePrint });
+  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared, finePrint]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -126,7 +131,33 @@ export default function App() {
     };
   }, [lang, result, deal, creditTier, kbbValue, getAnalysis]);
 
-  const goReview = (newDeal, ms = null) => {
+  // Follows the fine print read for a new upload (none for manual entry). A slower
+  // read from an earlier upload is ignored.
+  const trackFinePrint = (pending) => {
+    const run = ++finePrintRun.current;
+    if (!pending) return setFinePrint(null);
+    setFinePrint({ status: "loading", data: null, lang });
+    pending.then(
+      (data) => run === finePrintRun.current && setFinePrint({ status: "done", data, lang }),
+      () => run === finePrintRun.current && setFinePrint({ status: "error", data: null, lang }),
+    );
+  };
+
+  // Switching language re-explains the clauses already read, without asking Claude again.
+  useEffect(() => {
+    if (finePrint?.status !== "done" || finePrint.lang === lang) return;
+    let cancelled = false;
+    const clauses = finePrint.data.clauses.map(({ type, quote }) => ({ type, quote }));
+    explainFinePrint(clauses, lang)
+      .then((data) => !cancelled && setFinePrint({ status: "done", data: { ...data, mock: finePrint.data.mock }, lang }))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [lang, finePrint]);
+
+  const goReview = (newDeal, ms = null, finePrintPending = null) => {
+    trackFinePrint(finePrintPending);
     setDeal(newDeal);
     setExtractMs(ms);
     setError("");
@@ -163,6 +194,7 @@ export default function App() {
     setAdvice(null);
     setChats(null);
     setShared(false);
+    trackFinePrint(null);
     setError("");
     setScreen("upload");
   };
@@ -245,7 +277,7 @@ export default function App() {
               setCreditTier={setCreditTier}
               kbbValue={kbbValue}
               setKbbValue={setKbbValue}
-              onExtracted={(d, ms) => goReview(d, ms)}
+              onExtracted={(d, ms, fp) => goReview(d, ms, fp)}
               onManual={() => goReview(emptyDeal())}
               notice={error}
             />
@@ -265,20 +297,22 @@ export default function App() {
             />
           )}
           {screen === "results" && result && (
-            <Results
-              result={result}
-              onEdit={() => setScreen("review")}
-              onCounter={() => setScreen("counter")}
-              onShare={() => setScreen("share")}
-              shared={shared}
-              onStartOver={startOver}
-              profile={profile}
-              setProfile={setProfile}
-              hasReport={advice?.key === adviceKey}
-              onAdvise={() => setScreen("advisor")}
-              onChat={() => openChat("chat")}
-              onPractice={() => openChat("practice")}
-            />
+            <FinePrintProvider value={finePrint}>
+              <Results
+                result={result}
+                onEdit={() => setScreen("review")}
+                onCounter={() => setScreen("counter")}
+                onShare={() => setScreen("share")}
+                shared={shared}
+                onStartOver={startOver}
+                profile={profile}
+                setProfile={setProfile}
+                hasReport={advice?.key === adviceKey}
+                onAdvise={() => setScreen("advisor")}
+                onChat={() => openChat("chat")}
+                onPractice={() => openChat("practice")}
+              />
+            </FinePrintProvider>
           )}
           {screen === "advisor" && result && (
             <Advisor

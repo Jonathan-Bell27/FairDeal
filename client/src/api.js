@@ -53,6 +53,27 @@ export function extractDeal(file, lang) {
   return request("/extract", { method: "POST", body: form }, lang);
 }
 
+// Claude quotes specific clauses from the paperwork; the server explains them in `lang`.
+export function readFinePrint(file, lang) {
+  const form = new FormData();
+  form.append("file", file);
+  form.append("lang", lang);
+  return request("/fineprint", { method: "POST", body: form }, lang);
+}
+
+// Re-explains clauses already read, in another language. No new Claude call.
+export function explainFinePrint(clauses, lang) {
+  return request(
+    "/fineprint",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clauses, lang }),
+    },
+    lang,
+  );
+}
+
 export function analyzeDeal(deal, creditTier, kbbValue, lang) {
   return request(
     "/analyze",

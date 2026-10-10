@@ -124,3 +124,28 @@ export async function mockChat({ mode, analysis, messages, lang }, emit, signal)
     signal,
   );
 }
+
+// Fine print quotes copied from the sample contracts. The retail installment
+// contracts (04, 07, 10) carry the Holder notice; the buyer's orders carry the rest.
+export async function mockFinePrint(fileName = "") {
+  await wait(1200);
+  if (/risc/i.test(fileName)) {
+    return [
+      {
+        type: "holder_notice",
+        quote: "Any holder of this consumer credit contract is subject to all claims and defenses which the debtor could assert against the seller.",
+      },
+    ];
+  }
+  return [
+    {
+      type: "optional_products_notice",
+      quote: "Optional products are not required to purchase the vehicle or obtain financing, and Purchaser may decline them.",
+    },
+    {
+      type: "conditional_delivery",
+      quote: "This order is not binding until accepted by Dealer and, if financed, approved by the lender named above.",
+    },
+    { type: "as_is", quote: "Purchaser acknowledges the vehicle is sold AS IS unless a written warranty is provided." },
+  ];
+}
