@@ -1,50 +1,75 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { analyzeDeal, emptyDeal, wakeServer } from "./api.js";
+import { analyzeDeal, emptyDeal, explainFinePrint, wakeServer } from "./api.js";
 import { clearSession, loadSession, saveSession } from "./session.js";
 import { LangContext, STRINGS } from "./i18n.js";
 import { initialLang, initialTheme, setPref } from "./prefs.js";
 import Upload from "./screens/Upload.jsx";
 import Review from "./screens/Review.jsx";
 import Results from "./screens/Results.jsx";
+import { FinePrintProvider } from "./screens/FinePrint.jsx";
 import Counteroffer from "./screens/Counteroffer.jsx";
 import Advisor from "./screens/Advisor.jsx";
 import Chat from "./screens/Chat.jsx";
+import Share from "./screens/Share.jsx";
 import { PenSquiggle } from "./Pen.jsx";
+import { clearSharedCode, decodeShare, sharedCodeInUrl } from "./share.js";
 
-const saved = loadSession();
+// Opened from someone's second-opinion link? That deal replaces any saved session.
+const sharedCode = sharedCodeInUrl();
+const sharedDeal = sharedCode ? decodeShare(sharedCode) : null;
+const saved = sharedCode ? null : loadSession();
 // A results screen can't be restored without its result.
-if (saved && !saved.result && ["results", "counter", "advisor", "chat", "practice"].includes(saved.screen)) saved.screen = "review";
+if (saved && !saved.result && ["results", "counter", "advisor", "chat", "practice", "share"].includes(saved.screen)) saved.screen = "review";
 
 const hasPrice = (deal) => Number(String(deal.vehicle_price).replace(/[$,]/g, "")) > 0;
 const keyOf = (...inputs) => JSON.stringify(inputs);
 
 // Screens in order: upload -> review -> results -> counteroffer.
 export default function App() {
-  const [screen, setScreen] = useState(saved?.screen ?? "upload");
-  const [creditTier, setCreditTier] = useState(saved?.creditTier ?? "Good");
-  const [kbbValue, setKbbValue] = useState(saved?.kbbValue ?? "");
-  const [deal, setDeal] = useState(saved?.deal ?? emptyDeal());
+  const [screen, setScreen] = useState(sharedDeal ? "opening" : sharedCode ? "upload" : saved?.screen ?? "upload");
+  const [creditTier, setCreditTier] = useState(sharedDeal?.creditTier ?? saved?.creditTier ?? "Good");
+  const [kbbValue, setKbbValue] = useState(sharedDeal?.kbbValue ?? saved?.kbbValue ?? "");
+  const [deal, setDeal] = useState(sharedDeal?.deal ?? saved?.deal ?? emptyDeal());
   const [extractMs, setExtractMs] = useState(saved?.extractMs ?? null);
   const [result, setResult] = useState(saved?.result ?? null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(sharedCode && !sharedDeal ? STRINGS[initialLang()].share.openFailed : "");
   const [profile, setProfile] = useState(saved?.profile ?? { zip: "", monthly_income: "", keep_years: "", notes: "" });
   // Claude's research, tagged with the inputs it was run on so edits trigger a fresh run.
   const [advice, setAdvice] = useState(saved?.advice ?? null);
   // Chat and practice conversations, also tagged with the deal they're about.
   const [chats, setChats] = useState(saved?.chats ?? null);
+  // True when this deal came from someone else's share link.
+  const [shared, setShared] = useState(Boolean(sharedDeal) || (saved?.shared ?? false));
+  // Fine print read from the current upload: { status: "loading" | "done" | "error", data, lang }.
+  // A read still loading when the page reloaded is gone, so only a finished one is restored.
+  const [finePrint, setFinePrint] = useState(saved?.finePrint?.status === "done" ? saved.finePrint : null);
+  const finePrintRun = useRef(0);
   const [lang, setLang] = useState(initialLang);
   const [theme, setTheme] = useState(initialTheme);
   const t = STRINGS[lang];
 
+<<<<<<< HEAD
   useEffect(() => {
     wakeServer();
   }, []);
   useEffect(() => {window.scrollTo(0, 0);
   }, [screen]);
+=======
+  useEffect(wakeServer, []);
+  // A share link pasted into a tab that already has FairDeal open only changes
+  // the #fragment, so reload to open it.
   useEffect(() => {
-    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats });
-  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats]);
+    const onHash = () => sharedCodeInUrl() && location.reload();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+  useEffect(() => window.scrollTo(0, 0), [screen]);
+>>>>>>> origin/main
+  useEffect(() => {
+    if (screen === "opening") return;
+    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared, finePrint });
+  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared, finePrint]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -114,7 +139,33 @@ export default function App() {
     };
   }, [lang, result, deal, creditTier, kbbValue, getAnalysis]);
 
-  const goReview = (newDeal, ms = null) => {
+  // Follows the fine print read for a new upload (none for manual entry). A slower
+  // read from an earlier upload is ignored.
+  const trackFinePrint = (pending) => {
+    const run = ++finePrintRun.current;
+    if (!pending) return setFinePrint(null);
+    setFinePrint({ status: "loading", data: null, lang });
+    pending.then(
+      (data) => run === finePrintRun.current && setFinePrint({ status: "done", data, lang }),
+      () => run === finePrintRun.current && setFinePrint({ status: "error", data: null, lang }),
+    );
+  };
+
+  // Switching language re-explains the clauses already read, without asking Claude again.
+  useEffect(() => {
+    if (finePrint?.status !== "done" || finePrint.lang === lang) return;
+    let cancelled = false;
+    const clauses = finePrint.data.clauses.map(({ type, quote }) => ({ type, quote }));
+    explainFinePrint(clauses, lang)
+      .then((data) => !cancelled && setFinePrint({ status: "done", data: { ...data, mock: finePrint.data.mock }, lang }))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [lang, finePrint]);
+
+  const goReview = (newDeal, ms = null, finePrintPending = null) => {
+    trackFinePrint(finePrintPending);
     setDeal(newDeal);
     setExtractMs(ms);
     setError("");
@@ -134,16 +185,55 @@ export default function App() {
     }
   };
 
+  // True only while a shared link is opening; leaving that screen abandons it.
+  const opening = useRef(Boolean(sharedDeal));
+
   const startOver = () => {
+    opening.current = false;
+    // Someone else's credit range and KBB value don't belong on your own deal.
+    if (shared) {
+      setCreditTier("Good");
+      setKbbValue("");
+    }
     clearSession();
     setDeal(emptyDeal());
     setExtractMs(null);
     setResult(null);
     setAdvice(null);
     setChats(null);
+    setShared(false);
+    trackFinePrint(null);
     setError("");
     setScreen("upload");
   };
+
+  // Open a shared deal: decode the link, run the same analysis, show the markup.
+  // The link stays in the address bar until the markup is ready, so a reload
+  // while the server wakes up opens it again.
+  useEffect(() => {
+    if (!sharedCode) return;
+    if (!sharedDeal) return clearSharedCode();
+    let cancelled = false;
+    const done = () => cancelled || !opening.current;
+    getAnalysis(sharedDeal.deal, sharedDeal.creditTier, sharedDeal.kbbValue, lang)
+      .then((r) => {
+        clearSharedCode();
+        if (done()) return;
+        opening.current = false;
+        setResult(r);
+        setScreen("results");
+      })
+      .catch((err) => {
+        clearSharedCode();
+        if (done()) return;
+        opening.current = false;
+        setError(err.message);
+        setScreen("review");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <LangContext.Provider value={lang}>
@@ -195,8 +285,9 @@ export default function App() {
               setCreditTier={setCreditTier}
               kbbValue={kbbValue}
               setKbbValue={setKbbValue}
-              onExtracted={(d, ms) => goReview(d, ms)}
+              onExtracted={(d, ms, fp) => goReview(d, ms, fp)}
               onManual={() => goReview(emptyDeal())}
+              notice={error}
             />
           )}
           {screen === "review" && (
@@ -214,17 +305,22 @@ export default function App() {
             />
           )}
           {screen === "results" && result && (
-            <Results
-              result={result}
-              onEdit={() => setScreen("review")}
-              onCounter={() => setScreen("counter")}
-              profile={profile}
-              setProfile={setProfile}
-              hasReport={advice?.key === adviceKey}
-              onAdvise={() => setScreen("advisor")}
-              onChat={() => openChat("chat")}
-              onPractice={() => openChat("practice")}
-            />
+            <FinePrintProvider value={finePrint}>
+              <Results
+                result={result}
+                onEdit={() => setScreen("review")}
+                onCounter={() => setScreen("counter")}
+                onShare={() => setScreen("share")}
+                shared={shared}
+                onStartOver={startOver}
+                profile={profile}
+                setProfile={setProfile}
+                hasReport={advice?.key === adviceKey}
+                onAdvise={() => setScreen("advisor")}
+                onChat={() => openChat("chat")}
+                onPractice={() => openChat("practice")}
+              />
+            </FinePrintProvider>
           )}
           {screen === "advisor" && result && (
             <Advisor
@@ -254,6 +350,22 @@ export default function App() {
               feedback={chat.feedback}
               setFeedback={(f) => setChat({ feedback: f })}
               onBack={() => setScreen(chatBack.current === screen ? "results" : chatBack.current)}
+            />
+          )}
+          {screen === "opening" && (
+            <section className="screen" aria-busy="true" aria-live="polite">
+              <p className="eyebrow">{t.share.eyebrow}</p>
+              <h1>{t.share.opening}</h1>
+              <p className="lede">{t.upload.readingSlow}</p>
+            </section>
+          )}
+          {screen === "share" && result && (
+            <Share
+              result={result}
+              deal={deal}
+              creditTier={creditTier}
+              kbbValue={kbbValue}
+              onBack={() => setScreen("results")}
             />
           )}
           {screen === "counter" && result && (

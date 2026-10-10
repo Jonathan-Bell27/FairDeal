@@ -6,6 +6,8 @@ Snap a photo of a car loan offer or buyer's order. FairDeal reads the terms, fla
 
 Built mobile-first for buyers standing on the lot.
 
+**New here?** [The complete guide (PDF)](docs/FairDeal-Guide.pdf) explains every feature, how FairDeal uses the Claude API, where the facts come from, and what each file does, with no technical background needed.
+
 ---
 
 ## How It Works
@@ -42,8 +44,10 @@ Plain code, not the LLM, so every flag is deterministic and explainable.
 | --- | --- |
 | APR vs. credit tier | Rate well above typical for the user's credit tier |
 | Add-ons and protection products | VIN etching, nitrogen tires, paint protection, dealer prep, GAP, extended warranty priced above typical ranges |
-| Payment packing | 72+ month terms; shows total paid vs. car price |
+| Long loan term | 72+ month terms (scored at 84+); shows total paid vs. car price |
 | Price vs. market | Deal price vs. the KBB value the user enters |
+| Contract math | Amount financed more than $25 above what the itemized lines add up to; monthly payment above what the amount financed, APR and term work out to (shows the implied APR). Only checks totals printed on the document |
+| Negative equity | Trade-in payoff more than $50 above the trade-in allowance, rolled into the loan; shows the interest it costs and, with a KBB value, loan-to-value (shown, not scored) |
 
 ### 4. Results Screen
 - Deal Score
