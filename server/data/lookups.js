@@ -71,10 +71,12 @@ export const ADD_ONS = [
     key: "gap",
     label: "GAP coverage",
     match: /\bgap\b/i,
+    // Insurer GAP is under $100/yr with most carriers ($36-$95/yr in Georgia);
+    // $400 covers about 4 years, longer than most buyers stay upside down.
     fair: 400,
     flagAbove: 600,
-    why: "GAP is usually much cheaper through your auto insurer or a credit union.",
-    source: "Typical GAP pricing from auto insurers and credit unions",
+    why: "Adding GAP to your car insurance costs under $100 a year with most insurers ($36 to $95 a year in Georgia), so a few years of coverage costs far less than the dealer's price.",
+    source: "Insurance.com, How much is gap insurance in 2026? (Dec 2025)",
   },
   {
     key: "service_contract",
