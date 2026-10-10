@@ -5,6 +5,7 @@ import Upload from "./screens/Upload.jsx";
 import Review from "./screens/Review.jsx";
 import Results from "./screens/Results.jsx";
 import Counteroffer from "./screens/Counteroffer.jsx";
+import { PenSquiggle } from "./Pen.jsx";
 
 const saved = loadSession();
 // A results screen can't be restored without its result.
@@ -81,8 +82,9 @@ export default function App() {
   return (
     <div className="app">
       <header className="topbar">
-        <button className="brand" onClick={startOver}>
-          Fair<span>Deal</span>
+        <button className="brand" onClick={startOver} aria-label="FairDeal home">
+          FairDeal
+          <PenSquiggle />
         </button>
         {screen !== "upload" && (
           <button className="link" onClick={startOver}>

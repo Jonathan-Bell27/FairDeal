@@ -84,7 +84,9 @@ export function normalizeDeal(raw = {}) {
   return deal;
 }
 
-function flag({ id, category, title, detail, impact, source, scored = true, ask }) {
+// `line` is the contract line item as the Results screen marks it up:
+// { label, charged, note, strike } where note is the short red-pen correction.
+function flag({ id, category, title, detail, impact, source, scored = true, ask, line }) {
   const dollars = Math.max(0, Math.round(impact));
   return {
     id,
@@ -96,6 +98,7 @@ function flag({ id, category, title, detail, impact, source, scored = true, ask 
     points: scored ? Math.min(MAX_POINTS_PER_FLAG, Math.round(dollars / 100)) : 0,
     source,
     ask, // what the counteroffer requests
+    line,
   };
 }
 
@@ -118,6 +121,7 @@ function checkApr(deal, tier) {
       impact: extra,
       source: APR_SOURCE,
       ask: `Lower the APR to ${typical.apr}% (typical for my credit tier), or I'll use outside financing.`,
+      line: { label: "APR", charged: `${deal.apr}%`, note: `avg for ${tier} credit: ${typical.apr}%`, strike: false },
     }),
   ];
 }
@@ -142,6 +146,7 @@ function checkAddOns(deal) {
           source: rule.source,
           scored: false,
           ask: `Take the ${item.name} (${usd(item.amount)}) off the loan. I can buy coverage separately if I want it.`,
+          line: { label: item.name, charged: usd(item.amount), note: `+${usd(interest)} interest. Optional`, strike: false },
         }),
       );
       continue;
@@ -163,6 +168,16 @@ function checkAddOns(deal) {
           : remove || rule.key === "vin_etch" || rule.key === "paint_protection"
             ? `Remove the ${item.name} (${usd(item.amount)}).`
             : `Lower the ${item.name} from ${usd(item.amount)} to ${usd(rule.fair)}, or remove it.`,
+        line: {
+          label: item.name,
+          charged: usd(item.amount),
+          note: remove
+            ? "shouldn't be charged"
+            : rule.key === "doc_fee"
+              ? `GA avg ${usd(rule.fair)}`
+              : `about ${usd(rule.fair)} elsewhere`,
+          strike: rule.key !== "doc_fee",
+        },
       }),
     );
   }
@@ -200,6 +215,12 @@ function checkTerm(deal) {
       source: "Loan math from the contract's APR and amount financed",
       scored: packing,
       ask: `Show me the numbers on a 60-month term.`,
+      line: {
+        label: "Loan term",
+        charged: `${deal.term_months} months`,
+        note: `60 months saves ${usd(extra)}`,
+        strike: false,
+      },
     }),
   ];
 }
@@ -217,6 +238,7 @@ function checkPrice(deal, kbbValue) {
       impact: over,
       source: PRICE_SOURCE,
       ask: `Bring the vehicle price down to the KBB value of ${usd(kbbValue)}.`,
+      line: { label: "Vehicle price", charged: usd(deal.vehicle_price), note: `KBB value ${usd(kbbValue)}`, strike: false },
     }),
   ];
 }
