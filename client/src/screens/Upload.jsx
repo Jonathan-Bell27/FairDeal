@@ -35,12 +35,12 @@ export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValu
 
   if (busy) {
     return (
-      <section className="screen center">
-        <div className="spinner" aria-hidden="true" />
-        <h2>Reading your contract…</h2>
-        <p className="muted">
+      <section className="screen" aria-busy="true" aria-live="polite">
+        <h1>Reading your contract…</h1>
+        <p className="lede">
           {slow ? "Still working. The server may be waking up, which can take up to a minute." : "This usually takes a few seconds."}
         </p>
+        <ReviewSkeleton />
       </section>
     );
   }
@@ -96,5 +96,42 @@ export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValu
       <input ref={cameraInput} type="file" accept="image/*" capture="environment" hidden onChange={handleFile} />
       <input ref={fileInput} type="file" accept="image/*,application/pdf" hidden onChange={handleFile} />
     </section>
+  );
+}
+
+// Placeholder shaped like the Review screen, so the page doesn't jump when it loads.
+function ReviewSkeleton() {
+  const field = (wide) => (
+    <div className={`field ${wide ? "wide" : ""}`}>
+      <span className="skel skel-label" />
+      <span className="skel skel-input" />
+    </div>
+  );
+  return (
+    <div aria-hidden="true">
+      <div className="card">
+        <div className="row">
+          {field()}
+          {field()}
+        </div>
+      </div>
+      <div className="card">
+        <span className="skel skel-heading" />
+        <div className="grid">
+          {field(true)}
+          {field()}
+          {field()}
+        </div>
+      </div>
+      <div className="card">
+        <span className="skel skel-heading" />
+        <div className="grid">
+          {field()}
+          {field()}
+          {field()}
+          {field()}
+        </div>
+      </div>
+    </div>
   );
 }

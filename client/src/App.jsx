@@ -1,23 +1,53 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { analyzeDeal, emptyDeal, wakeServer } from "./api.js";
+import { clearSession, loadSession, saveSession } from "./session.js";
 import Upload from "./screens/Upload.jsx";
 import Review from "./screens/Review.jsx";
 import Results from "./screens/Results.jsx";
 import Counteroffer from "./screens/Counteroffer.jsx";
 
+const saved = loadSession();
+// A results screen can't be restored without its result.
+if (saved && !saved.result && (saved.screen === "results" || saved.screen === "counter")) saved.screen = "review";
+
+const hasPrice = (deal) => Number(String(deal.vehicle_price).replace(/[$,]/g, "")) > 0;
+
 // Screens in order: upload -> review -> results -> counteroffer.
 export default function App() {
-  const [screen, setScreen] = useState("upload");
-  const [creditTier, setCreditTier] = useState("Good");
-  const [kbbValue, setKbbValue] = useState("");
-  const [deal, setDeal] = useState(emptyDeal());
-  const [extractNote, setExtractNote] = useState("");
-  const [result, setResult] = useState(null);
+  const [screen, setScreen] = useState(saved?.screen ?? "upload");
+  const [creditTier, setCreditTier] = useState(saved?.creditTier ?? "Good");
+  const [kbbValue, setKbbValue] = useState(saved?.kbbValue ?? "");
+  const [deal, setDeal] = useState(saved?.deal ?? emptyDeal());
+  const [extractNote, setExtractNote] = useState(saved?.extractNote ?? "");
+  const [result, setResult] = useState(saved?.result ?? null);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(wakeServer, []);
   useEffect(() => window.scrollTo(0, 0), [screen]);
+  useEffect(() => {
+    saveSession({ screen, creditTier, kbbValue, deal, extractNote, result });
+  }, [screen, creditTier, kbbValue, deal, extractNote, result]);
+
+  // Analysis results keyed by their exact inputs. The Review screen fills this
+  // in the background, so "Check this deal" is usually instant.
+  const analyses = useRef(new Map());
+  const getAnalysis = useCallback((d, tier, kbb) => {
+    const key = JSON.stringify([d, tier, kbb]);
+    if (!analyses.current.has(key)) {
+      if (analyses.current.size > 20) analyses.current.clear();
+      const pending = analyzeDeal(d, tier, kbb);
+      pending.catch(() => analyses.current.delete(key)); // retry on the next ask
+      analyses.current.set(key, pending);
+    }
+    return analyses.current.get(key);
+  }, []);
+
+  useEffect(() => {
+    if (screen !== "review" || !hasPrice(deal)) return;
+    const t = setTimeout(() => getAnalysis(deal, creditTier, kbbValue).catch(() => {}), 500);
+    return () => clearTimeout(t);
+  }, [screen, deal, creditTier, kbbValue, getAnalysis]);
 
   const goReview = (newDeal, note = "") => {
     setDeal(newDeal);
@@ -30,7 +60,7 @@ export default function App() {
     setAnalyzing(true);
     setError("");
     try {
-      setResult(await analyzeDeal(deal, creditTier, kbbValue));
+      setResult(await getAnalysis(deal, creditTier, kbbValue));
       setScreen("results");
     } catch (err) {
       setError(err.message);
@@ -40,7 +70,9 @@ export default function App() {
   };
 
   const startOver = () => {
+    clearSession();
     setDeal(emptyDeal());
+    setExtractNote("");
     setResult(null);
     setError("");
     setScreen("upload");

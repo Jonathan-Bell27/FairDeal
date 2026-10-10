@@ -98,7 +98,12 @@ export default function Review({
                 value={shown(item.amount)}
                 onChange={(e) => setItem(list, i, "amount", e.target.value)}
               />
-              <button className="icon" aria-label="Remove item" onClick={() => removeItem(list, i)}>
+              <button
+                className="icon"
+                aria-label={`Remove ${item.name || "this item"}`}
+                data-tooltip="Remove item"
+                onClick={() => removeItem(list, i)}
+              >
                 ×
               </button>
             </div>
