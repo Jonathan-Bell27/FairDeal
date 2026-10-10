@@ -1361,6 +1361,14 @@ textarea {
   color: var(--muted);
   text-align: center;
 }
+/* The fair value needs room: let it wrap under the label on narrow phones. */
+.line.fixing .line-top {
+  flex-wrap: wrap;
+  row-gap: 2px;
+}
+.line.fixing .fixed-to {
+  margin-left: auto;
+}
 .line.fixing .charged.strike::after {
   animation-delay: calc(0.15s + var(--i, 0) * 0.12s);
 }

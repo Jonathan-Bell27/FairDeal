@@ -229,7 +229,7 @@ test("contract math: a payment padded $45/mo is flagged once, with its implied A
   assert.equal(gap.line.label, "Monthly payment");
   assert.match(gap.ask, /extra \$45 a month/);
   assert.match(gap.detail, /Edit the numbers/);
-  const implied = Number(gap.detail.match(/about ([\d.]+)% APR, not the 9\.9%/)[1]);
+  const implied = Number(gap.detail.match(/about what a ([\d.]+)% APR would cost, not the 9\.9%/)[1]);
   assert.ok(implied > 9.9);
   const { amount_financed, monthly_payment } = padded.deal;
   assert.ok(Math.abs(monthlyPayment(amount_financed, implied, 84) - monthly_payment) < 1);

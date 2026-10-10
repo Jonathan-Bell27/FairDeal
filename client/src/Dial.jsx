@@ -45,8 +45,13 @@ export default function Dial({ score, label, ofText }) {
   const at = useRef({ needle: 0, shown: 0 });
 
   useEffect(() => {
-    if (reducedMotion()) return;
     let raf;
+    if (reducedMotion()) {
+      // Keep the resting state current in case reduced motion is turned off later.
+      at.current = { needle: score, shown: score };
+      raf = requestAnimationFrame(() => setFrame({ needle: score, shown: score, landed: true }));
+      return () => cancelAnimationFrame(raf);
+    }
     const from = at.current;
     const start = performance.now() + (from.shown === 0 ? 300 : 0); // let the page settle first
     const tick = (now) => {

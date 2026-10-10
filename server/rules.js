@@ -271,7 +271,10 @@ function checkMath(deal, printed, m) {
   if (printed.monthly_payment && deal.apr && deal.term_months) {
     const expected = monthlyPayment(deal.amount_financed, deal.apr, deal.term_months);
     const gap = deal.monthly_payment - expected;
-    if (gap > Math.max(PAYMENT_TOLERANCE.min, expected * PAYMENT_TOLERANCE.share)) {
+    // Truth in Lending lets the first payment come up to ~45 days after signing,
+    // which raises a correctly disclosed payment by about half a month's interest.
+    const firstPeriod = expected * (deal.apr / 1200) * 0.5;
+    if (gap > Math.max(PAYMENT_TOLERANCE.min, expected * PAYMENT_TOLERANCE.share) + firstPeriod) {
       const t = m.paymentGap({
         gap,
         expected,
@@ -304,7 +307,8 @@ function checkMath(deal, printed, m) {
 // Old-car debt rolled into this loan. Shown, not scored: it's the buyer's own
 // loan, not a dealer charge, so there's nothing to ask the dealer to take off.
 function checkNegativeEquity(deal, kbbValue, m) {
-  const rolled = deal.trade_in_payoff - deal.trade_in_allowance;
+  // A down payment can cover part of the old balance, so count only what the loan holds.
+  const rolled = Math.min(deal.trade_in_payoff - deal.trade_in_allowance, deal.amount_financed);
   if (rolled <= NEGATIVE_EQUITY_MIN || !deal.term_months) return [];
   const interest = monthlyPayment(rolled, deal.apr, deal.term_months) * deal.term_months - rolled;
   const t = m.negativeEquity({
@@ -384,7 +388,7 @@ export function buildCounteroffer(deal, flags, lang = "en") {
 // Fix-It Mode shows a real result rather than a guess. Each scored flag's line
 // gets `fixed`, the value it becomes.
 function fairDeal(deal, creditTier, kbb, flags, lang, m) {
-  const red = flags.filter((f) => f.severity === "red");
+  const red = flags.filter((f) => f.severity === "red" && f.dollar_impact > 0);
   if (!red.length) return null;
   const has = (id) => red.some((f) => f.id === id);
   const typical = TYPICAL_APR[creditTier].apr;
@@ -399,7 +403,8 @@ function fairDeal(deal, creditTier, kbb, flags, lang, m) {
   for (const list of ["fees", "add_ons"]) {
     fixed[list] = deal[list].map((item) => {
       const rule = ADD_ONS.find((r) => r.match.test(item.name));
-      if (!rule || rule.financed || !red.some((f) => f.line?.label === item.name)) return item;
+      const flagged = rule && !rule.financed && item.amount > rule.flagAbove;
+      if (!flagged || !red.some((f) => f.line?.label === item.name)) return item;
       itemFix.set(item.name, rule.fair);
       cut += item.amount - rule.fair;
       return { ...item, amount: rule.fair };
@@ -412,7 +417,9 @@ function fairDeal(deal, creditTier, kbb, flags, lang, m) {
   // Financed deals keep the contract's amount financed minus the fixes, so
   // rebates the lines don't show still count. The payment is recomputed.
   const financed = deal.amount_financed > 0 && deal.term_months > 0;
-  fixed.amount_financed = financed ? Math.max(0, round2(deal.amount_financed - cut)) : 0;
+  const left = round2(deal.amount_financed - cut);
+  // Nothing left to borrow: 0 here would make normalizeDeal rebuild it from the lines.
+  fixed.amount_financed = financed ? Math.max(0.01, left) : 0;
   fixed.monthly_payment = 0;
   fixed.total_of_payments = 0;
   const after = analyze(fixed, { creditTier, kbbValue: kbb, lang, fair: false });
@@ -422,6 +429,8 @@ function fairDeal(deal, creditTier, kbb, flags, lang, m) {
     if (f.id === "price") to = usd(kbb);
     else if (f.id === "apr") to = `${typical}%`;
     else if (f.id === "term") to = m.fixedTerm(60);
+    else if (f.id === "payment_gap") to = usd(monthlyPayment(deal.amount_financed, deal.apr, deal.term_months));
+    else if (f.id === "unexplained_amount") to = usd(deal.amount_financed - f.dollar_impact);
     else if (itemFix.has(f.line?.label)) to = itemFix.get(f.line.label) ? usd(itemFix.get(f.line.label)) : m.fixedRemoved;
     f.line = { ...f.line, fixed: to };
   }
@@ -434,8 +443,8 @@ function fairDeal(deal, creditTier, kbb, flags, lang, m) {
     financed,
     apr: fixed.apr,
     term_months: fixed.term_months,
-    monthly_payment: financed ? after.deal.monthly_payment : 0,
-    total_of_payments: financed ? after.deal.total_of_payments : 0,
+    monthly_payment: financed && left > 0 ? after.deal.monthly_payment : 0,
+    total_of_payments: financed && left > 0 ? after.deal.total_of_payments : 0,
     // Cash deals: the itemized total before and after.
     price_total: round2(itemsTotal(deal)),
     fair_price_total: round2(itemsTotal(fixed)),

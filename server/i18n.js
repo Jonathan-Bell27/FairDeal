@@ -83,7 +83,7 @@ const en = {
 
   paymentGap: ({ gap, expected, payment, financed, apr, implied, months, total }) => ({
     title: `Payment is ${usd(gap)} a month more than the loan math`,
-    detail: `${usd(financed)} at ${apr}% for ${months} months works out to ${usd(expected)}/mo, but the contract shows ${usd(payment)}/mo, about ${usd(total)} more over the loan. Your payment works out to about ${implied}% APR, not the ${apr}% on the contract. Ask what the extra pays for; it can be a product or fee that isn't listed. If we misread a number, tap Edit the numbers.`,
+    detail: `${usd(financed)} at ${apr}% for ${months} months works out to ${usd(expected)}/mo, but the contract shows ${usd(payment)}/mo, about ${usd(total)} more over the loan. That's about what a ${implied}% APR would cost, not the ${apr}% on the contract. Ask the dealer to show what the extra pays for: it can be a product or fee that isn't listed, or a first payment due more than 45 days after signing. If we misread a number, tap Edit the numbers.`,
     ask: `Explain the extra ${usd(gap)} a month, or lower the payment to ${usd(expected)}.`,
     label: "Monthly payment",
     note: `should be about ${usd(expected)}`,
@@ -198,7 +198,7 @@ const es = {
 
   paymentGap: ({ gap, expected, payment, financed, apr, implied, months, total }) => ({
     title: `Pagas ${usd(gap)} al mes más de lo que da el cálculo del préstamo`,
-    detail: `Con ${usd(financed)} al ${apr}% por ${months} meses, el pago sería de ${usd(expected)}/mes, pero el contrato muestra ${usd(payment)}/mes, unos ${usd(total)} más en todo el préstamo. Tu pago equivale a una tasa (APR) de alrededor de ${implied}%, no el ${apr}% del contrato. Pregunta qué paga la diferencia; puede ser un producto o cargo que no aparece en el contrato. Si leímos mal algún número, toca Editar los números.`,
+    detail: `Con ${usd(financed)} al ${apr}% por ${months} meses, el pago sería de ${usd(expected)}/mes, pero el contrato muestra ${usd(payment)}/mes, unos ${usd(total)} más en todo el préstamo. Eso es lo que costaría una tasa (APR) de alrededor de ${implied}%, no el ${apr}% del contrato. Pide al concesionario que muestre qué paga la diferencia: puede ser un producto o cargo que no aparece en el contrato, o un primer pago a más de 45 días de la firma. Si leímos mal algún número, toca Editar los números.`,
     ask: `Explicar los ${usd(gap)} de más al mes, o bajar el pago a ${usd(expected)}.`,
     label: "Pago mensual",
     note: `debería ser unos ${usd(expected)}`,

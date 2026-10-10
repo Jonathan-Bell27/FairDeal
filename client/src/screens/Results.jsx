@@ -188,8 +188,8 @@ function DeepDive({ profile, setProfile, onStart, hasReport, onChat, onPractice 
 // What the fair version changes: payment, length and rate for a loan, or the
 // itemized total for a cash deal. The new payment rolls down as it appears.
 function FixSummary({ deal, fair, t }) {
-  const payment = useCountUp(fair.monthly_payment);
-  const total = useCountUp(fair.fair_price_total);
+  const payment = useCountUp(fair.monthly_payment, 1100, deal.monthly_payment);
+  const total = useCountUp(fair.fair_price_total, 1100, fair.price_total);
   const rows = fair.financed
     ? [
         [t.payment, `${usd(deal.monthly_payment)}`, `${usd(payment)}`],
