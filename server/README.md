@@ -56,7 +56,9 @@ Errors return `{ error }` with status 400, 413, 415, 429, or 502. On any error, 
 ```
 
 ### `POST /analyze`
-JSON: `{ "deal": <reviewed deal>, "credit_tier": "Excellent" | "Good" | "Fair" | "Poor", "kbb_value": 19800 }`
+JSON: `{ "deal": <reviewed deal>, "credit_tier": "Excellent" | "Good" | "Fair" | "Poor", "kbb_value": 19800, "lang": "en" | "es" }`
+
+`lang` is optional (default `"en"`). With `"es"`, flag text, the verdict label, the counteroffer and the disclaimer come back in Spanish; scores and dollar amounts are identical. Strings live in `i18n.js`.
 
 Numbers may come back from form inputs as strings (`"$19,800"` is fine). Missing `amount_financed`, `monthly_payment`, or `total_of_payments` are computed.
 

@@ -104,6 +104,28 @@ test("normalizeDeal coerces strings and derives missing totals", () => {
   assert.equal(d.total_of_payments, Math.round(d.monthly_payment * 60 * 100) / 100);
 });
 
+test("Spanish: same verdicts and numbers, translated text", () => {
+  for (const s of answerKey) {
+    const en = run(s.file);
+    const es = analyze(toDeal(s.expected_extraction), {
+      creditTier: s.test_inputs.credit_tier,
+      kbbValue: s.test_inputs.kbb_value_to_enter,
+      lang: "es",
+    });
+    assert.equal(es.score, en.score);
+    assert.equal(es.verdict.key, en.verdict.key);
+    assert.deepEqual(es.flags.map((f) => f.dollar_impact), en.flags.map((f) => f.dollar_impact));
+    assert.notEqual(es.counteroffer, en.counteroffer);
+    assert.match(es.disclaimer, /No es asesoría financiera/);
+  }
+});
+
+test("unknown lang falls back to English", () => {
+  const c = answerKey[1];
+  const r = analyze(toDeal(c.expected_extraction), { creditTier: "Good", kbbValue: 19800, lang: "fr" });
+  assert.equal(r.verdict.label, "Walk away or get outside financing");
+});
+
 test("rejects an unknown credit tier", () => {
   assert.throws(() => analyze({}, { creditTier: "Great" }), /credit_tier/);
 });

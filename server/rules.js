@@ -3,19 +3,17 @@
 
 import {
   ADD_ONS,
-  APR_SOURCE,
   APR_TOLERANCE,
   HIGH_MILEAGE,
-  PRICE_SOURCE,
   PRICE_TOLERANCE,
   TERM_CAUTION_MONTHS,
   TERM_PACKING_MONTHS,
   TYPICAL_APR,
 } from "./data/lookups.js";
+import { LANGS, messages } from "./i18n.js";
 
 export const CREDIT_TIERS = Object.keys(TYPICAL_APR);
-export const DISCLAIMER =
-  "AI-assisted analysis for informational purposes. Not financial advice. Verify terms before signing.";
+export const DISCLAIMER = messages("en").disclaimer;
 
 const MAX_POINTS_PER_FLAG = 25;
 
@@ -102,7 +100,7 @@ function flag({ id, category, title, detail, impact, source, scored = true, ask,
   };
 }
 
-function checkApr(deal, tier) {
+function checkApr(deal, tier, m) {
   const typical = TYPICAL_APR[tier];
   if (!typical || !deal.apr || !deal.term_months) return [];
   if (deal.apr <= typical.apr + APR_TOLERANCE) return [];
@@ -110,23 +108,31 @@ function checkApr(deal, tier) {
   const actualTotal = monthlyPayment(deal.amount_financed, deal.apr, deal.term_months) * deal.term_months;
   const fairTotal = monthlyPayment(deal.amount_financed, typical.apr, deal.term_months) * deal.term_months;
   const extra = actualTotal - fairTotal;
-  const gap = deal.apr - typical.apr;
+  const t = m.apr({
+    apr: deal.apr,
+    gap: (deal.apr - typical.apr).toFixed(1),
+    tier: m.tier[tier],
+    typical: typical.apr,
+    experianTier: typical.experianTier,
+    extra,
+    months: deal.term_months,
+  });
 
   return [
     flag({
       id: "apr",
-      category: "APR vs. credit tier",
-      title: `APR ${deal.apr}% is ${gap.toFixed(1)} points above typical for ${tier} credit`,
-      detail: `Buyers with ${tier.toLowerCase()} credit (${typical.experianTier}) typically get about ${typical.apr}% on a used car. At that rate you'd pay about ${usd(extra)} less in interest over ${deal.term_months} months. Get pre-approved at a credit union or bank and ask the dealer to match it.`,
+      category: m.category.apr,
+      title: t.title,
+      detail: t.detail,
       impact: extra,
-      source: APR_SOURCE,
-      ask: `Lower the APR to ${typical.apr}% (typical for my credit tier), or I'll use outside financing.`,
-      line: { label: "APR", charged: `${deal.apr}%`, note: `avg for ${tier} credit: ${typical.apr}%`, strike: false },
+      source: m.aprSource,
+      ask: t.ask,
+      line: { label: "APR", charged: `${deal.apr}%`, note: t.note, strike: false },
     }),
   ];
 }
 
-function checkAddOns(deal) {
+function checkAddOns(deal, m, lang) {
   const flags = [];
   const seen = new Set();
   for (const item of [...deal.fees, ...deal.add_ons]) {
@@ -134,19 +140,22 @@ function checkAddOns(deal) {
     if (!rule || item.amount <= rule.flagAbove) continue;
     const id = seen.has(rule.key) ? `${rule.key}_${seen.size}` : rule.key;
     seen.add(rule.key);
+    const why = (lang === "es" && rule.why_es) || rule.why;
+    const source = (lang === "es" && rule.source_es) || rule.source;
     if (rule.financed) {
       const interest = monthlyPayment(item.amount, deal.apr, deal.term_months) * deal.term_months - item.amount;
+      const t = m.financed({ name: item.name, amount: item.amount, interest, apr: deal.apr, months: deal.term_months, why });
       flags.push(
         flag({
           id,
-          category: "Add-ons and fees",
-          title: `${item.name}: ${usd(item.amount)}, plus about ${usd(interest)} in interest`,
-          detail: `${rule.why} Rolled into this loan at ${deal.apr}% for ${deal.term_months} months, it would cost about ${usd(interest)} in interest. You can pay for it separately or buy coverage later.`,
+          category: m.category.addOns,
+          title: t.title,
+          detail: t.detail,
           impact: interest,
-          source: rule.source,
+          source,
           scored: false,
-          ask: `Take the ${item.name} (${usd(item.amount)}) off the loan. I can buy coverage separately if I want it.`,
-          line: { label: item.name, charged: usd(item.amount), note: `+${usd(interest)} interest. Optional`, strike: false },
+          ask: t.ask,
+          line: { label: item.name, charged: usd(item.amount), note: t.note, strike: false },
         }),
       );
       continue;
@@ -156,26 +165,20 @@ function checkAddOns(deal) {
     flags.push(
       flag({
         id,
-        category: "Add-ons and fees",
-        title: remove
-          ? `${item.name}: ${usd(item.amount)} you shouldn't pay`
-          : `${item.name}: ${usd(item.amount)} vs. about ${usd(rule.fair)} typical`,
-        detail: rule.why,
+        category: m.category.addOns,
+        title: remove ? m.addOnTitleRemove(item.name, item.amount) : m.addOnTitleCompare(item.name, item.amount, rule.fair),
+        detail: why,
         impact,
-        source: rule.source,
+        source,
         ask: rule.key === "doc_fee"
-          ? `Take ${usd(impact)} off the vehicle price to offset the ${item.name}, which is above the ${usd(rule.fair)} state average.`
+          ? m.askDocFee(item.name, impact, rule.fair)
           : remove || rule.key === "vin_etch" || rule.key === "paint_protection"
-            ? `Remove the ${item.name} (${usd(item.amount)}).`
-            : `Lower the ${item.name} from ${usd(item.amount)} to ${usd(rule.fair)}, or remove it.`,
+            ? m.askRemove(item.name, item.amount)
+            : m.askLower(item.name, item.amount, rule.fair),
         line: {
           label: item.name,
           charged: usd(item.amount),
-          note: remove
-            ? "shouldn't be charged"
-            : rule.key === "doc_fee"
-              ? `GA avg ${usd(rule.fair)}`
-              : `about ${usd(rule.fair)} elsewhere`,
+          note: remove ? m.noteRemove : rule.key === "doc_fee" ? m.noteDocFee(rule.fair) : m.noteElsewhere(rule.fair),
           strike: rule.key !== "doc_fee",
         },
       }),
@@ -184,87 +187,74 @@ function checkAddOns(deal) {
   return flags;
 }
 
-function checkTerm(deal) {
+function checkTerm(deal, m) {
   if (deal.term_months < TERM_CAUTION_MONTHS) return [];
   const packing = deal.term_months >= TERM_PACKING_MONTHS;
   const at60 = monthlyPayment(deal.amount_financed, deal.apr, 60);
   const extra = deal.total_of_payments - at60 * 60;
-  const overPrice = deal.total_of_payments + deal.down_payment - deal.vehicle_price;
-  const highMiles = deal.mileage >= HIGH_MILEAGE;
-
-  let detail =
-    `You'd pay ${usd(deal.total_of_payments + deal.down_payment)} in total for a car priced at ${usd(deal.vehicle_price)}, ` +
-    `${usd(overPrice)} more than the price. A 60-month term at the same rate would cost about ${usd(extra)} less in interest ` +
-    `(${usd(at60)}/mo instead of ${usd(deal.monthly_payment)}/mo).`;
-  if (highMiles) {
-    detail += ` With ${deal.mileage.toLocaleString("en-US")} miles, the car may need major repairs before it's paid off.`;
-  }
-  if (!packing) {
-    detail += " Not counted in your score: a shorter term means a higher monthly payment.";
-  }
+  const t = m.term({
+    total: deal.total_of_payments + deal.down_payment,
+    price: deal.vehicle_price,
+    overPrice: deal.total_of_payments + deal.down_payment - deal.vehicle_price,
+    extra,
+    at60,
+    monthly: deal.monthly_payment,
+    miles: deal.mileage,
+    highMiles: deal.mileage >= HIGH_MILEAGE,
+    packing,
+    months: deal.term_months,
+  });
 
   return [
     flag({
       id: "term",
-      category: "Payment packing",
-      title: packing
-        ? `${deal.term_months}-month loan stretches the payment to hide the cost`
-        : `${deal.term_months}-month loan${highMiles ? " on a high-mileage car" : ""}`,
-      detail,
+      category: m.category.term,
+      title: t.title,
+      detail: t.detail,
       impact: extra,
-      source: "Loan math from the contract's APR and amount financed",
+      source: m.termSource,
       scored: packing,
-      ask: `Show me the numbers on a 60-month term.`,
-      line: {
-        label: "Loan term",
-        charged: `${deal.term_months} months`,
-        note: `60 months saves ${usd(extra)}`,
-        strike: false,
-      },
+      ask: t.ask,
+      line: { label: t.label, charged: t.charged, note: t.note, strike: false },
     }),
   ];
 }
 
-function checkPrice(deal, kbbValue) {
+function checkPrice(deal, kbbValue, m) {
   if (!kbbValue || !deal.vehicle_price) return [];
   const over = deal.vehicle_price - kbbValue;
   if (over <= PRICE_TOLERANCE) return [];
+  const t = m.price({ over, price: deal.vehicle_price, kbb: kbbValue });
   return [
     flag({
       id: "price",
-      category: "Price vs. market",
-      title: `Price is ${usd(over)} above market value`,
-      detail: `The vehicle price is ${usd(deal.vehicle_price)}; Kelley Blue Book values it at ${usd(kbbValue)}.`,
+      category: m.category.price,
+      title: t.title,
+      detail: t.detail,
       impact: over,
-      source: PRICE_SOURCE,
-      ask: `Bring the vehicle price down to the KBB value of ${usd(kbbValue)}.`,
-      line: { label: "Vehicle price", charged: usd(deal.vehicle_price), note: `KBB value ${usd(kbbValue)}`, strike: false },
+      source: m.priceSource,
+      ask: t.ask,
+      line: { label: t.label, charged: usd(deal.vehicle_price), note: t.note, strike: false },
     }),
   ];
 }
 
-export function verdictFor(score) {
-  if (score >= 85) return { key: "fair", label: "Fair deal" };
-  if (score >= 60) return { key: "negotiate", label: "Negotiate before signing" };
-  return { key: "walk", label: "Walk away or get outside financing" };
+export function verdictFor(score, lang = "en") {
+  const key = score >= 85 ? "fair" : score >= 60 ? "negotiate" : "walk";
+  return { key, label: messages(lang).verdict[key] };
 }
 
-export function buildCounteroffer(deal, flags) {
+export function buildCounteroffer(deal, flags, lang = "en") {
+  const m = messages(lang);
   const asks = flags.map((f) => f.ask).filter(Boolean);
-  const car = deal.vehicle || "the car";
-  if (asks.length === 0) {
-    return `Hi, thanks for the numbers on ${car}. Everything looks in line with the market, and I'm ready to move forward. Please send the final paperwork.`;
-  }
-  return [
-    `Hi, I'm interested in ${car}, but I need a few changes before I can sign:`,
-    "",
-    ...asks.map((a) => `- ${a}`),
-    "",
-    "If you can make these changes, I'm ready to move forward today. Please send an updated buyer's order.",
-  ].join("\n");
+  const car = deal.vehicle || m.theCar;
+  if (asks.length === 0) return m.counterClean(car);
+  return [m.counterIntro(car), "", ...asks.map((a) => `- ${a}`), "", m.counterOutro].join("\n");
 }
 
-export function analyze(rawDeal, { creditTier, kbbValue } = {}) {
+export function analyze(rawDeal, { creditTier, kbbValue, lang = "en" } = {}) {
+  if (!LANGS.includes(lang)) lang = "en";
+  const m = messages(lang);
   if (!CREDIT_TIERS.includes(creditTier)) {
     throw new Error(`credit_tier must be one of: ${CREDIT_TIERS.join(", ")}`);
   }
@@ -272,10 +262,10 @@ export function analyze(rawDeal, { creditTier, kbbValue } = {}) {
   const kbb = num(kbbValue);
 
   const flags = [
-    ...checkApr(deal, creditTier),
-    ...checkPrice(deal, kbb),
-    ...checkTerm(deal),
-    ...checkAddOns(deal),
+    ...checkApr(deal, creditTier, m),
+    ...checkPrice(deal, kbb, m),
+    ...checkTerm(deal, m),
+    ...checkAddOns(deal, m, lang),
   ];
 
   const penalty = flags.reduce((s, f) => s + f.points, 0);
@@ -286,12 +276,12 @@ export function analyze(rawDeal, { creditTier, kbbValue } = {}) {
 
   return {
     score,
-    verdict: verdictFor(score),
+    verdict: verdictFor(score, lang),
     total_savings: totalSavings,
     flags,
-    counteroffer: buildCounteroffer(deal, flags),
+    counteroffer: buildCounteroffer(deal, flags, lang),
     deal,
-    inputs: { credit_tier: creditTier, kbb_value: kbb },
-    disclaimer: DISCLAIMER,
+    inputs: { credit_tier: creditTier, kbb_value: kbb, lang },
+    disclaimer: m.disclaimer,
   };
 }
