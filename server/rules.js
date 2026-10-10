@@ -16,6 +16,10 @@ export const CREDIT_TIERS = Object.keys(TYPICAL_APR);
 export const DISCLAIMER = messages("en").disclaimer;
 
 const MAX_POINTS_PER_FLAG = 25;
+// Contract math: gaps this small are rounding, not padding.
+const AMOUNT_TOLERANCE = 25; // dollars of amount financed
+const PAYMENT_TOLERANCE = { min: 2, share: 0.005 }; // per month: $2 or 0.5%, whichever is more
+const NEGATIVE_EQUITY_MIN = 50;
 
 const num = (v) => {
   const n = typeof v === "string" ? Number(v.replace(/[$,%\s]/g, "")) : Number(v);
@@ -24,6 +28,17 @@ const num = (v) => {
 const round2 = (n) => Math.round(n * 100) / 100;
 const usd = (n) =>
   "$" + Math.round(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
+const sum = (list) => list.reduce((s, i) => s + i.amount, 0);
+
+// What the itemized lines add up to: the amount financed if nothing else was added.
+const itemizedTotal = (d) =>
+  d.vehicle_price +
+  sum(d.fees) +
+  sum(d.add_ons) +
+  sum(d.taxes_and_government_fees) +
+  d.trade_in_payoff -
+  d.trade_in_allowance -
+  d.down_payment;
 
 // Monthly payment for a fully amortizing loan.
 export function monthlyPayment(principal, aprPercent, months) {
@@ -31,6 +46,19 @@ export function monthlyPayment(principal, aprPercent, months) {
   const r = aprPercent / 100 / 12;
   if (r === 0) return principal / months;
   return (principal * r) / (1 - Math.pow(1 + r, -months));
+}
+
+// The APR that turns this principal into this payment. The payment rises with
+// the rate, so bisect.
+function impliedApr(principal, payment, months) {
+  let lo = 0;
+  let hi = 1000;
+  for (let i = 0; i < 60; i++) {
+    const mid = (lo + hi) / 2;
+    if (monthlyPayment(principal, mid, months) < payment) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
 }
 
 // Coerce whatever came back from the Review screen into clean numbers.
@@ -60,16 +88,7 @@ export function normalizeDeal(raw = {}) {
 
   // Fill in derived values the document didn't show.
   if (!deal.amount_financed) {
-    const sum = (list) => list.reduce((s, i) => s + i.amount, 0);
-    deal.amount_financed = round2(
-      deal.vehicle_price +
-        sum(deal.fees) +
-        sum(deal.add_ons) +
-        sum(deal.taxes_and_government_fees) +
-        deal.trade_in_payoff -
-        deal.trade_in_allowance -
-        deal.down_payment,
-    );
+    deal.amount_financed = round2(itemizedTotal(deal));
   }
   if (!deal.monthly_payment) {
     deal.monthly_payment = round2(
@@ -187,18 +206,19 @@ function checkAddOns(deal, m, lang) {
   return flags;
 }
 
-function checkTerm(deal, m) {
+// `loan` is the payment and total to compare against 60 months (see checkMath).
+function checkTerm(deal, m, loan) {
   if (deal.term_months < TERM_CAUTION_MONTHS) return [];
   const packing = deal.term_months >= TERM_PACKING_MONTHS;
   const at60 = monthlyPayment(deal.amount_financed, deal.apr, 60);
-  const extra = deal.total_of_payments - at60 * 60;
+  const extra = loan.total - at60 * 60;
   const t = m.term({
     total: deal.total_of_payments + deal.down_payment,
     price: deal.vehicle_price,
     overPrice: deal.total_of_payments + deal.down_payment - deal.vehicle_price,
     extra,
     at60,
-    monthly: deal.monthly_payment,
+    monthly: loan.payment,
     miles: deal.mileage,
     highMiles: deal.mileage >= HIGH_MILEAGE,
     packing,
@@ -216,6 +236,99 @@ function checkTerm(deal, m) {
       scored: packing,
       ask: t.ask,
       line: { label: t.label, charged: t.charged, note: t.note, strike: false },
+    }),
+  ];
+}
+
+// Checks the contract's own arithmetic, using only totals printed on it (the
+// ones normalizeDeal fills in agree by construction). Also returns the payment
+// and total the term check should use: the loan math's when the printed payment
+// is padded, so the padding is counted once, here, and not again as interest.
+function checkMath(deal, printed, m) {
+  const flags = [];
+  const loan = { payment: deal.monthly_payment, total: deal.total_of_payments };
+  if (!printed.amount_financed) return { flags, loan };
+
+  // A lower amount financed than the lines (a rebate, say) is not flagged.
+  const itemized = itemizedTotal(deal);
+  const unexplained = deal.amount_financed - itemized;
+  if (deal.vehicle_price && unexplained > AMOUNT_TOLERANCE) {
+    const t = m.unexplained({ gap: unexplained, itemized, financed: deal.amount_financed });
+    flags.push(
+      flag({
+        id: "unexplained_amount",
+        category: m.category.math,
+        title: t.title,
+        detail: t.detail,
+        impact: unexplained,
+        source: m.unexplainedSource,
+        ask: t.ask,
+        line: { label: t.label, charged: usd(deal.amount_financed), note: t.note, strike: false },
+      }),
+    );
+  }
+
+  if (printed.monthly_payment && deal.apr && deal.term_months) {
+    const expected = monthlyPayment(deal.amount_financed, deal.apr, deal.term_months);
+    const gap = deal.monthly_payment - expected;
+    if (gap > Math.max(PAYMENT_TOLERANCE.min, expected * PAYMENT_TOLERANCE.share)) {
+      const t = m.paymentGap({
+        gap,
+        expected,
+        payment: deal.monthly_payment,
+        financed: deal.amount_financed,
+        apr: deal.apr,
+        implied: impliedApr(deal.amount_financed, deal.monthly_payment, deal.term_months).toFixed(1),
+        months: deal.term_months,
+        total: gap * deal.term_months,
+      });
+      flags.push(
+        flag({
+          id: "payment_gap",
+          category: m.category.math,
+          title: t.title,
+          detail: t.detail,
+          impact: gap * deal.term_months,
+          source: m.paymentGapSource,
+          ask: t.ask,
+          line: { label: t.label, charged: usd(deal.monthly_payment), note: t.note, strike: false },
+        }),
+      );
+      loan.payment = expected;
+      loan.total = expected * deal.term_months;
+    }
+  }
+  return { flags, loan };
+}
+
+// Old-car debt rolled into this loan. Shown, not scored: it's the buyer's own
+// loan, not a dealer charge, so there's nothing to ask the dealer to take off.
+function checkNegativeEquity(deal, kbbValue, m) {
+  const rolled = deal.trade_in_payoff - deal.trade_in_allowance;
+  if (rolled <= NEGATIVE_EQUITY_MIN || !deal.term_months) return [];
+  const interest = monthlyPayment(rolled, deal.apr, deal.term_months) * deal.term_months - rolled;
+  const t = m.negativeEquity({
+    rolled,
+    payoff: deal.trade_in_payoff,
+    allowance: deal.trade_in_allowance,
+    interest,
+    apr: deal.apr,
+    months: deal.term_months,
+    owed: deal.amount_financed,
+    kbb: kbbValue,
+    ltv: kbbValue ? Math.round((deal.amount_financed / kbbValue) * 100) : 0,
+    upsideDown: Boolean(kbbValue) && deal.amount_financed > kbbValue,
+  });
+  return [
+    flag({
+      id: "negative_equity",
+      category: m.category.tradeIn,
+      title: t.title,
+      detail: t.detail,
+      impact: interest,
+      source: m.negativeEquitySource,
+      scored: false,
+      line: { label: t.label, charged: usd(rolled), note: t.note, strike: false },
     }),
   ];
 }
@@ -335,14 +448,22 @@ export function analyze(rawDeal, { creditTier, kbbValue, lang = "en", fair = tru
   if (!CREDIT_TIERS.includes(creditTier)) {
     throw new Error(`credit_tier must be one of: ${CREDIT_TIERS.join(", ")}`);
   }
+  // normalizeDeal fills in totals the document didn't show, so note which were printed.
+  const printed = {
+    amount_financed: num(rawDeal?.amount_financed) > 0,
+    monthly_payment: num(rawDeal?.monthly_payment) > 0,
+  };
   const deal = normalizeDeal(rawDeal);
   const kbb = num(kbbValue);
+  const math = checkMath(deal, printed, m);
 
   const flags = [
     ...checkApr(deal, creditTier, m),
     ...checkPrice(deal, kbb, m),
-    ...checkTerm(deal, m),
+    ...checkTerm(deal, m, math.loan),
     ...checkAddOns(deal, m, lang),
+    ...math.flags,
+    ...checkNegativeEquity(deal, kbb, m),
   ];
 
   const penalty = flags.reduce((s, f) => s + f.points, 0);

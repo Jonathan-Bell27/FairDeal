@@ -18,6 +18,8 @@ const en = {
     addOns: "Add-ons and fees",
     term: "Long loan term",
     price: "Price vs. market",
+    math: "Contract math",
+    tradeIn: "Trade-in",
   },
 
   apr: ({ apr, gap, tier, typical, experianTier, extra, months }) => ({
@@ -70,6 +72,39 @@ const en = {
   }),
   priceSource: "Kelley Blue Book value entered by the buyer",
 
+  unexplained: ({ gap, itemized, financed }) => ({
+    title: `${usd(gap)} in the loan isn't on any line`,
+    detail: `The price, fees, add-ons, taxes and trade-in, minus your down payment, add up to ${usd(itemized)}, but the contract's amount financed is ${usd(financed)}. Ask the dealer to itemize the other ${usd(gap)} or remove it. If we misread a number, tap Edit the numbers.`,
+    ask: `Itemize or remove the ${usd(gap)} in the amount financed that isn't on any line.`,
+    label: "Amount financed",
+    note: `${usd(gap)} not itemized`,
+  }),
+  unexplainedSource: "Contract math: the itemized lines vs. the amount financed printed on the contract",
+
+  paymentGap: ({ gap, expected, payment, financed, apr, implied, months, total }) => ({
+    title: `Payment is ${usd(gap)} a month more than the loan math`,
+    detail: `${usd(financed)} at ${apr}% for ${months} months works out to ${usd(expected)}/mo, but the contract shows ${usd(payment)}/mo, about ${usd(total)} more over the loan. Your payment works out to about ${implied}% APR, not the ${apr}% on the contract. Ask what the extra pays for; it can be a product or fee that isn't listed. If we misread a number, tap Edit the numbers.`,
+    ask: `Explain the extra ${usd(gap)} a month, or lower the payment to ${usd(expected)}.`,
+    label: "Monthly payment",
+    note: `should be about ${usd(expected)}`,
+  }),
+  paymentGapSource: "Loan math from the contract's amount financed, APR and term",
+
+  negativeEquity: ({ rolled, payoff, allowance, interest, apr, months, owed, kbb, ltv, upsideDown }) => ({
+    title: `${usd(rolled)} you still owe on your trade-in is rolled into this loan`,
+    detail:
+      `You owe ${usd(payoff)} on your trade-in and the dealer is giving you ${usd(allowance)} for it, so the other ${usd(rolled)} is added to this loan.` +
+      (interest >= 1 ? ` At ${apr}% for ${months} months, that old balance costs about ${usd(interest)} in interest.` : "") +
+      (kbb
+        ? ` You'd owe ${usd(owed)} on a car worth about ${usd(kbb)} (${ltv}% of its value)` +
+          (upsideDown ? ", so you'd owe more than the car is worth from day one." : ".")
+        : "") +
+      " Not counted in your score: it's your old loan, not a dealer charge. A better offer for your trade-in, or paying part of the balance in cash, means borrowing less.",
+    label: "Trade-in balance",
+    note: interest >= 1 ? `old loan, +${usd(interest)} interest` : "old loan carried over",
+  }),
+  negativeEquitySource: "Loan math from the contract's trade-in payoff and allowance",
+
   theCar: "the car",
   counterClean: (car) =>
     `Hi, thanks for the numbers on ${car}. Everything looks in line with the market, and I'm ready to move forward. Please send the final paperwork.`,
@@ -95,6 +130,8 @@ const es = {
     addOns: "Extras y cargos",
     term: "Plazo largo del préstamo",
     price: "Precio vs. mercado",
+    math: "Cálculos del contrato",
+    tradeIn: "Auto a cambio",
   },
 
   apr: ({ apr, gap, tier, typical, experianTier, extra, months }) => ({
@@ -149,6 +186,39 @@ const es = {
     note: `valor KBB ${usd(kbb)}`,
   }),
   priceSource: "Valor de Kelley Blue Book ingresado por el comprador",
+
+  unexplained: ({ gap, itemized, financed }) => ({
+    title: `Hay ${usd(gap)} en el préstamo que no aparecen en ninguna línea`,
+    detail: `El precio, los cargos, los extras, los impuestos y tu auto a cambio, menos tu pago inicial, suman ${usd(itemized)}, pero el monto financiado del contrato es ${usd(financed)}. Pídele al concesionario que detalle los otros ${usd(gap)} o que los quite. Si leímos mal algún número, toca Editar los números.`,
+    ask: `Detallar o quitar los ${usd(gap)} del monto financiado que no aparecen en ninguna línea.`,
+    label: "Monto financiado",
+    note: `${usd(gap)} sin detallar`,
+  }),
+  unexplainedSource: "Cálculo del contrato: las líneas detalladas vs. el monto financiado impreso en el contrato",
+
+  paymentGap: ({ gap, expected, payment, financed, apr, implied, months, total }) => ({
+    title: `Pagas ${usd(gap)} al mes más de lo que da el cálculo del préstamo`,
+    detail: `Con ${usd(financed)} al ${apr}% por ${months} meses, el pago sería de ${usd(expected)}/mes, pero el contrato muestra ${usd(payment)}/mes, unos ${usd(total)} más en todo el préstamo. Tu pago equivale a una tasa (APR) de alrededor de ${implied}%, no el ${apr}% del contrato. Pregunta qué paga la diferencia; puede ser un producto o cargo que no aparece en el contrato. Si leímos mal algún número, toca Editar los números.`,
+    ask: `Explicar los ${usd(gap)} de más al mes, o bajar el pago a ${usd(expected)}.`,
+    label: "Pago mensual",
+    note: `debería ser unos ${usd(expected)}`,
+  }),
+  paymentGapSource: "Cálculo del préstamo con el monto financiado, la tasa y el plazo del contrato",
+
+  negativeEquity: ({ rolled, payoff, allowance, interest, apr, months, owed, kbb, ltv, upsideDown }) => ({
+    title: `Los ${usd(rolled)} que aún debes de tu auto anterior se suman a este préstamo`,
+    detail:
+      `Debes ${usd(payoff)} de tu auto a cambio y el concesionario te da ${usd(allowance)} por él, así que los otros ${usd(rolled)} se suman a este préstamo.` +
+      (interest >= 1 ? ` Al ${apr}% por ${months} meses, esa deuda anterior te cuesta unos ${usd(interest)} en intereses.` : "") +
+      (kbb
+        ? ` Deberías ${usd(owed)} por un auto que vale unos ${usd(kbb)} (${ltv}% de su valor)` +
+          (upsideDown ? ", así que desde el primer día deberías más de lo que vale el auto." : ".")
+        : "") +
+      " No cuenta en tu puntaje: es tu préstamo anterior, no un cargo del concesionario. Con una mejor oferta por tu auto, o pagando parte de la deuda en efectivo, pedirías prestado menos.",
+    label: "Saldo del auto anterior",
+    note: interest >= 1 ? `deuda anterior, +${usd(interest)} de intereses` : "deuda anterior incluida",
+  }),
+  negativeEquitySource: "Cálculo del préstamo con la deuda y el valor de tu auto a cambio en el contrato",
 
   theCar: "el auto",
   counterClean: (car) =>
