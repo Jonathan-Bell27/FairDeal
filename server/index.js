@@ -15,6 +15,10 @@ const origins = process.env.CLIENT_ORIGIN?.split(",").map((o) => o.trim());
 app.use(cors(origins ? { origin: origins } : {}));
 app.use(express.json({ limit: "1mb" }));
 
+app.get("/", (req, res) => {
+  res.json({ name: "FairDeal API", endpoints: ["GET /health", "GET /config", "POST /extract", "POST /analyze"] });
+});
+
 app.get("/health", (req, res) => {
   res.json({ ok: true, model: MODEL, has_api_key: Boolean(process.env.ANTHROPIC_API_KEY) });
 });
