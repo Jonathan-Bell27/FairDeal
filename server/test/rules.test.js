@@ -5,6 +5,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { analyze, monthlyPayment, normalizeDeal } from "../rules.js";
+import { TYPICAL_APR } from "../data/lookups.js";
 
 const answerKey = JSON.parse(
   readFileSync(new URL("../../sample-contracts/answer_key.json", import.meta.url), "utf8"),
@@ -54,6 +55,25 @@ test("02 predatory: every flag, Walk away", () => {
   assert.equal(sc.severity, "caution");
   assert.equal(sc.points, 0);
   assert.match(sc.title, /in interest/);
+});
+
+test("savings don't count the rate and term overlap twice", () => {
+  // 02 has both a high APR and an 84-month term.
+  const r = run("02_predatory.pdf");
+  const red = r.flags.filter((f) => f.severity === "red");
+  const lines = red.reduce((s, f) => s + f.dollar_impact, 0);
+  assert.ok(r.savings_overlap > 0);
+  assert.equal(r.total_savings, lines - r.savings_overlap);
+
+  // Fixing both together: same principal changes, fair rate and 60 months at once.
+  const { deal } = r;
+  const total = (apr, months) => monthlyPayment(deal.amount_financed, apr, months) * months;
+  const principal = red.filter((f) => f.id !== "apr" && f.id !== "term").reduce((s, f) => s + f.dollar_impact, 0);
+  const together = principal + deal.total_of_payments - total(TYPICAL_APR.Good.apr, 60);
+  assert.ok(Math.abs(r.total_savings - together) <= 3, `${r.total_savings} vs ${together}`);
+
+  // With only one of the two flags there is nothing to subtract.
+  assert.equal(run("03_borderline.pdf").savings_overlap, 0);
 });
 
 test("03 borderline: Negotiate", () => {

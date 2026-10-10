@@ -42,7 +42,7 @@ Plain code, not the LLM, so every flag is deterministic and explainable.
 | --- | --- |
 | APR vs. credit tier | Rate well above typical for the user's credit tier |
 | Add-ons and protection products | VIN etching, nitrogen tires, paint protection, dealer prep, GAP, extended warranty priced above typical ranges |
-| Payment packing | 72+ month terms; shows total paid vs. car price |
+| Long loan term | 72+ month terms (scored at 84+); shows total paid vs. car price |
 | Price vs. market | Deal price vs. the KBB value the user enters |
 
 ### 4. Results Screen

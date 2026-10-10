@@ -131,7 +131,7 @@ export const ADD_ONS = [
   },
 ];
 
-// Payment packing thresholds.
+// Long-loan thresholds. (Dealers use "payment packing" for hiding extra charges in the payment, so we don't call this that.)
 export const TERM_CAUTION_MONTHS = 72; // flagged, shown but not scored
 export const TERM_PACKING_MONTHS = 84; // flagged and scored
 export const HIGH_MILEAGE = 75000;

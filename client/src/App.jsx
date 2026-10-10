@@ -9,39 +9,54 @@ import Results from "./screens/Results.jsx";
 import Counteroffer from "./screens/Counteroffer.jsx";
 import Advisor from "./screens/Advisor.jsx";
 import Chat from "./screens/Chat.jsx";
+import Share from "./screens/Share.jsx";
 import { PenSquiggle } from "./Pen.jsx";
+import { clearSharedCode, decodeShare, sharedCodeInUrl } from "./share.js";
 
-const saved = loadSession();
+// Opened from someone's second-opinion link? That deal replaces any saved session.
+const sharedCode = sharedCodeInUrl();
+const sharedDeal = sharedCode ? decodeShare(sharedCode) : null;
+const saved = sharedCode ? null : loadSession();
 // A results screen can't be restored without its result.
-if (saved && !saved.result && ["results", "counter", "advisor", "chat", "practice"].includes(saved.screen)) saved.screen = "review";
+if (saved && !saved.result && ["results", "counter", "advisor", "chat", "practice", "share"].includes(saved.screen)) saved.screen = "review";
 
 const hasPrice = (deal) => Number(String(deal.vehicle_price).replace(/[$,]/g, "")) > 0;
 const keyOf = (...inputs) => JSON.stringify(inputs);
 
 // Screens in order: upload -> review -> results -> counteroffer.
 export default function App() {
-  const [screen, setScreen] = useState(saved?.screen ?? "upload");
-  const [creditTier, setCreditTier] = useState(saved?.creditTier ?? "Good");
-  const [kbbValue, setKbbValue] = useState(saved?.kbbValue ?? "");
-  const [deal, setDeal] = useState(saved?.deal ?? emptyDeal());
+  const [screen, setScreen] = useState(sharedDeal ? "opening" : sharedCode ? "upload" : saved?.screen ?? "upload");
+  const [creditTier, setCreditTier] = useState(sharedDeal?.creditTier ?? saved?.creditTier ?? "Good");
+  const [kbbValue, setKbbValue] = useState(sharedDeal?.kbbValue ?? saved?.kbbValue ?? "");
+  const [deal, setDeal] = useState(sharedDeal?.deal ?? saved?.deal ?? emptyDeal());
   const [extractMs, setExtractMs] = useState(saved?.extractMs ?? null);
   const [result, setResult] = useState(saved?.result ?? null);
   const [analyzing, setAnalyzing] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(sharedCode && !sharedDeal ? STRINGS[initialLang()].share.openFailed : "");
   const [profile, setProfile] = useState(saved?.profile ?? { zip: "", monthly_income: "", keep_years: "", notes: "" });
   // Claude's research, tagged with the inputs it was run on so edits trigger a fresh run.
   const [advice, setAdvice] = useState(saved?.advice ?? null);
   // Chat and practice conversations, also tagged with the deal they're about.
   const [chats, setChats] = useState(saved?.chats ?? null);
+  // True when this deal came from someone else's share link.
+  const [shared, setShared] = useState(Boolean(sharedDeal) || (saved?.shared ?? false));
   const [lang, setLang] = useState(initialLang);
   const [theme, setTheme] = useState(initialTheme);
   const t = STRINGS[lang];
 
   useEffect(wakeServer, []);
+  // A share link pasted into a tab that already has FairDeal open only changes
+  // the #fragment, so reload to open it.
+  useEffect(() => {
+    const onHash = () => sharedCodeInUrl() && location.reload();
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
   useEffect(() => window.scrollTo(0, 0), [screen]);
   useEffect(() => {
-    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats });
-  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats]);
+    if (screen === "opening") return;
+    saveSession({ screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared });
+  }, [screen, creditTier, kbbValue, deal, extractMs, result, profile, advice, chats, shared]);
 
   useEffect(() => {
     document.documentElement.lang = lang;
@@ -131,16 +146,54 @@ export default function App() {
     }
   };
 
+  // True only while a shared link is opening; leaving that screen abandons it.
+  const opening = useRef(Boolean(sharedDeal));
+
   const startOver = () => {
+    opening.current = false;
+    // Someone else's credit range and KBB value don't belong on your own deal.
+    if (shared) {
+      setCreditTier("Good");
+      setKbbValue("");
+    }
     clearSession();
     setDeal(emptyDeal());
     setExtractMs(null);
     setResult(null);
     setAdvice(null);
     setChats(null);
+    setShared(false);
     setError("");
     setScreen("upload");
   };
+
+  // Open a shared deal: decode the link, run the same analysis, show the markup.
+  // The link stays in the address bar until the markup is ready, so a reload
+  // while the server wakes up opens it again.
+  useEffect(() => {
+    if (!sharedCode) return;
+    if (!sharedDeal) return clearSharedCode();
+    let cancelled = false;
+    const done = () => cancelled || !opening.current;
+    getAnalysis(sharedDeal.deal, sharedDeal.creditTier, sharedDeal.kbbValue, lang)
+      .then((r) => {
+        clearSharedCode();
+        if (done()) return;
+        opening.current = false;
+        setResult(r);
+        setScreen("results");
+      })
+      .catch((err) => {
+        clearSharedCode();
+        if (done()) return;
+        opening.current = false;
+        setError(err.message);
+        setScreen("review");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <LangContext.Provider value={lang}>
@@ -194,6 +247,7 @@ export default function App() {
               setKbbValue={setKbbValue}
               onExtracted={(d, ms) => goReview(d, ms)}
               onManual={() => goReview(emptyDeal())}
+              notice={error}
             />
           )}
           {screen === "review" && (
@@ -215,6 +269,9 @@ export default function App() {
               result={result}
               onEdit={() => setScreen("review")}
               onCounter={() => setScreen("counter")}
+              onShare={() => setScreen("share")}
+              shared={shared}
+              onStartOver={startOver}
               profile={profile}
               setProfile={setProfile}
               hasReport={advice?.key === adviceKey}
@@ -251,6 +308,22 @@ export default function App() {
               feedback={chat.feedback}
               setFeedback={(f) => setChat({ feedback: f })}
               onBack={() => setScreen(chatBack.current === screen ? "results" : chatBack.current)}
+            />
+          )}
+          {screen === "opening" && (
+            <section className="screen" aria-busy="true" aria-live="polite">
+              <p className="eyebrow">{t.share.eyebrow}</p>
+              <h1>{t.share.opening}</h1>
+              <p className="lede">{t.upload.readingSlow}</p>
+            </section>
+          )}
+          {screen === "share" && result && (
+            <Share
+              result={result}
+              deal={deal}
+              creditTier={creditTier}
+              kbbValue={kbbValue}
+              onBack={() => setScreen("results")}
             />
           )}
           {screen === "counter" && result && (

@@ -16,7 +16,7 @@ const en = {
   category: {
     apr: "APR vs. credit tier",
     addOns: "Add-ons and fees",
-    term: "Payment packing",
+    term: "Long loan term",
     price: "Price vs. market",
   },
 
@@ -89,7 +89,7 @@ const es = {
   category: {
     apr: "Tasa (APR) según tu crédito",
     addOns: "Extras y cargos",
-    term: "Plazo inflado",
+    term: "Plazo largo del préstamo",
     price: "Precio vs. mercado",
   },
 
