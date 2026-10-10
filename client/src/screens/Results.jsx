@@ -15,7 +15,7 @@ export default function Results({ result, onEdit, onCounter }) {
       <p className="eyebrow">{t.eyebrow}</p>
 
       <div className="sheet verdict-sheet">
-        <Dial score={score} verdict={verdict.key} label={t.dialLabel(score)} ofText={t.scoreOf} />
+        <Dial score={score} label={t.dialLabel(score)} ofText={t.scoreOf} />
         <div className="verdict-text">
           <div className={`stamp ${verdict.key}`}>{t.stamp[verdict.key] ?? verdict.label}</div>
           <div className="verdict-sub">{t.sub[verdict.key]}</div>

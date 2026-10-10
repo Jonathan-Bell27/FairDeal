@@ -9,6 +9,12 @@
   --red: #c4281b;
   --red-wash: rgba(196, 40, 27, 0.07);
   --red-btn: #c4281b;
+  --g-red: #e0322b;
+  --g-yellow: #f5b800;
+  --g-green: #1f9d55;
+  --g-red-text: #c4281b;
+  --g-yellow-text: #a06e00;
+  --g-green-text: #1b7f46;
   --green: #24744a;
   --amber: #a5610a;
   --hilite: rgba(255, 220, 60, 0.55);
@@ -35,6 +41,12 @@
   --red: #ff7a6b;
   --red-wash: rgba(255, 122, 107, 0.09);
   --red-btn: #c63325;
+  --g-red: #ff5a4f;
+  --g-yellow: #ffc933;
+  --g-green: #3ccf7a;
+  --g-red-text: #ff6e64;
+  --g-yellow-text: #ffc933;
+  --g-green-text: #4fd88a;
   --green: #6fd197;
   --amber: #f2b24f;
   --hilite: rgba(242, 196, 60, 0.28);
@@ -51,6 +63,12 @@
     --red: #ff7a6b;
     --red-wash: rgba(255, 122, 107, 0.09);
     --red-btn: #c63325;
+    --g-red: #ff5a4f;
+    --g-yellow: #ffc933;
+    --g-green: #3ccf7a;
+    --g-red-text: #ff6e64;
+    --g-yellow-text: #ffc933;
+    --g-green-text: #4fd88a;
     --green: #6fd197;
     --amber: #f2b24f;
     --hilite: rgba(242, 196, 60, 0.28);
@@ -516,8 +534,8 @@ textarea:focus {
 /* ---------- Results: score dial ---------- */
 .dial {
   position: relative;
-  width: 150px;
-  grid-row: span 2;
+  width: min(100%, 290px);
+  margin: 0 auto;
 }
 .dial svg {
   display: block;
@@ -526,70 +544,147 @@ textarea:focus {
 }
 .dial-zone {
   fill: none;
-  stroke-width: 7;
-  stroke-linecap: round;
-  opacity: 0.3;
+  stroke-width: 20;
+  stroke-linecap: butt;
+  transform-origin: 120px 120px;
 }
 .dial-zone.walk {
-  stroke: var(--red);
+  stroke: var(--g-red);
 }
 .dial-zone.negotiate {
-  stroke: var(--amber);
+  stroke: var(--g-yellow);
 }
 .dial-zone.fair {
-  stroke: var(--green);
+  stroke: var(--g-green);
 }
-.dial.walk .dial-zone.walk,
-.dial.negotiate .dial-zone.negotiate,
-.dial.fair .dial-zone.fair {
-  opacity: 1;
+/* Until the needle lands, every zone is equal; then the others fade back. */
+.dial.landed .dial-zone:not(.active) {
+  opacity: 0.38;
+  transition: opacity 0.4s ease;
+}
+.dial.landed .dial-zone.active {
+  animation: zone-pop 0.55s cubic-bezier(0.2, 1.8, 0.4, 1);
+}
+@keyframes zone-pop {
+  0% {
+    stroke-width: 20;
+  }
+  40% {
+    stroke-width: 30;
+  }
+  100% {
+    stroke-width: 20;
+  }
 }
 .dial-tick {
   stroke: var(--muted);
   stroke-width: 1.5;
   stroke-linecap: round;
 }
+.dial-tick.major {
+  stroke: var(--ink);
+  stroke-width: 2.5;
+}
+.dial-end {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--muted);
+}
 .dial-needle {
   stroke: var(--ink);
-  stroke-width: 3;
+  stroke-width: 5;
   stroke-linecap: round;
 }
 .dial-hub {
   fill: var(--ink);
 }
+.dial-hub-dot {
+  fill: var(--sheet);
+}
+.dial-burst {
+  fill: none;
+  stroke-width: 4;
+  opacity: 0;
+  transform-origin: 120px 120px;
+}
+.dial-burst.walk {
+  stroke: var(--g-red);
+}
+.dial-burst.negotiate {
+  stroke: var(--g-yellow);
+}
+.dial-burst.fair {
+  stroke: var(--g-green);
+}
+.dial.landed .dial-burst {
+  animation: burst 0.8s ease-out;
+}
+@keyframes burst {
+  0% {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(6);
+  }
+}
 .dial-number {
-  margin-top: -6px;
+  margin-top: 4px;
   text-align: center;
   font-family: var(--serif);
-  font-size: 2.4rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.03em;
+  font-size: 4.2rem;
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
   font-variant-numeric: tabular-nums;
+  transition: color 0.2s ease;
+}
+.dial-number.walk {
+  color: var(--g-red-text);
+}
+.dial-number.negotiate {
+  color: var(--g-yellow-text);
+}
+.dial-number.fair {
+  color: var(--g-green-text);
+}
+.dial.landed .dial-number {
+  animation: number-pop 0.45s cubic-bezier(0.2, 1.8, 0.4, 1);
+}
+@keyframes number-pop {
+  40% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 .dial-number small {
   display: block;
-  margin-top: 3px;
+  margin-top: 6px;
   font-family: var(--mono);
-  font-size: 0.62rem;
-  font-weight: 500;
-  letter-spacing: 0.1em;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
   color: var(--muted);
 }
 .verdict-text {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
-  align-items: flex-start;
+  margin-top: 14px;
 }
 
 /* ---------- Results: the verdict ---------- */
 .verdict-sheet {
-  display: grid;
-  grid-template-columns: auto 1fr;
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 4px 18px;
-  padding: 22px 18px 18px;
+  text-align: center;
+  padding: 24px 18px 18px;
 }
 .stamp {
   font-family: var(--mono);
@@ -604,13 +699,13 @@ textarea:focus {
   animation: stamp 0.35s 0.5s cubic-bezier(0.2, 1.6, 0.4, 1) both;
 }
 .stamp.walk {
-  color: var(--red);
+  color: var(--g-red-text);
 }
 .stamp.negotiate {
-  color: var(--amber);
+  color: var(--g-yellow-text);
 }
 .stamp.fair {
-  color: var(--green);
+  color: var(--g-green-text);
 }
 @keyframes stamp {
   from {
@@ -628,8 +723,8 @@ textarea:focus {
   margin-top: 6px;
 }
 .keep {
-  grid-column: 1 / -1;
-  margin-top: 12px;
+  align-self: stretch;
+  margin-top: 16px;
   padding-top: 12px;
   border-top: 1px dashed var(--rule);
   font-family: var(--pen);
@@ -801,6 +896,9 @@ textarea:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .dial.landed .dial-zone.active,
+  .dial.landed .dial-burst,
+  .dial.landed .dial-number,
   .skel,
   .stamp,
   .charged.strike::after,
