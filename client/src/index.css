@@ -116,10 +116,6 @@ h3 {
 .screen {
   padding-bottom: 16px;
 }
-.screen.center {
-  text-align: center;
-  padding-top: 18vh;
-}
 .card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -253,20 +249,61 @@ textarea:focus {
   font-weight: 500;
 }
 
-/* Loading */
-.spinner {
-  width: 44px;
-  height: 44px;
-  margin: 0 auto 18px;
-  border: 4px solid var(--border);
-  border-top-color: var(--brand);
-  border-radius: 50%;
-  animation: spin 0.9s linear infinite;
+/* Skeleton placeholders */
+.skel {
+  display: block;
+  border-radius: 8px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.3s ease-in-out infinite;
 }
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
+.skel-label {
+  width: 45%;
+  height: 12px;
+  margin: 3px 0;
+}
+.skel-input {
+  height: 44px;
+  border-radius: 10px;
+}
+.skel-heading {
+  width: 30%;
+  height: 16px;
+  margin-bottom: 14px;
+}
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
   }
+  to {
+    background-position: -100% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .skel {
+    animation: none;
+  }
+}
+
+/* Tooltips for icon-only buttons */
+[data-tooltip] {
+  position: relative;
+}
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  right: 0;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* Results */
