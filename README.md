@@ -6,6 +6,8 @@ Snap a photo of a car loan offer or buyer's order. FairDeal reads the terms, fla
 
 Built mobile-first for buyers standing on the lot.
 
+**New here?** [The complete guide (PDF)](docs/FairDeal-Guide.pdf) explains every feature, how FairDeal uses the Claude API, where the facts come from, and what each file does, with no technical background needed.
+
 ---
 
 ## How It Works
