@@ -866,6 +866,205 @@ textarea:focus {
   margin-top: 24px;
 }
 
+/* ---------- Go deeper (results) ---------- */
+.deep-dive {
+  margin-top: 26px;
+  padding: 20px 16px;
+}
+.deep-dive .eyebrow {
+  margin-top: 0;
+}
+.deep-dive h2 {
+  margin: 0 0 6px;
+}
+.deep-dive .grid {
+  margin-top: 14px;
+}
+textarea {
+  resize: vertical;
+}
+
+/* ---------- Advisor ---------- */
+.research-log ol {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+}
+.log-head {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.research-log li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--rule);
+  font-size: 0.93rem;
+}
+.log-mark {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  margin-top: 3px;
+  border-radius: 50%;
+  border: 2px solid var(--g-green);
+  background: var(--g-green);
+}
+.research-log li.active .log-mark {
+  background: transparent;
+  border-color: var(--rule);
+  border-top-color: var(--red);
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.log-foot {
+  margin: 10px 0 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.alert-actions {
+  margin-top: 10px;
+}
+.alert-actions .btn {
+  width: auto;
+  display: inline-flex;
+  padding: 8px 14px;
+}
+.mock-banner {
+  padding: 10px 12px;
+  border: 1.5px dashed var(--amber);
+  border-radius: 6px;
+  color: var(--amber);
+  font-family: var(--mono);
+  font-size: 0.78rem;
+}
+.afford {
+  border-left: 5px solid var(--muted);
+}
+.afford.comfortable {
+  border-left-color: var(--g-green);
+}
+.afford.stretch {
+  border-left-color: var(--g-yellow);
+}
+.afford.risky {
+  border-left-color: var(--g-red);
+}
+.afford p {
+  margin: 0;
+}
+.afford-label {
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.afford-verdict {
+  font-family: var(--serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 2px 0 6px !important;
+}
+.afford.comfortable .afford-verdict {
+  color: var(--g-green-text);
+}
+.afford.stretch .afford-verdict {
+  color: var(--g-yellow-text);
+}
+.afford.risky .afford-verdict {
+  color: var(--g-red-text);
+}
+.plan {
+  margin: 0;
+  padding-left: 22px;
+}
+.plan li {
+  margin-bottom: 12px;
+}
+.plan li::marker {
+  font-family: var(--mono);
+  font-weight: 600;
+  color: var(--red);
+}
+.plan strong {
+  display: block;
+}
+.plan span {
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+.scripts blockquote {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-left: 3px solid var(--red);
+  background: var(--sheet);
+  font-family: var(--pen);
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.walk-list {
+  margin: 0;
+  padding-left: 20px;
+}
+.walk-list li {
+  margin-bottom: 6px;
+}
+.walk-list li::marker {
+  content: "✕  ";
+  color: var(--red);
+  font-weight: 700;
+}
+.finding-group + .finding-group {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--rule);
+}
+.finding {
+  margin-bottom: 10px;
+}
+.finding p {
+  margin: 0;
+  font-size: 0.93rem;
+}
+.finding-head {
+  font-weight: 600;
+}
+.source-link,
+.all-sources a {
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  color: var(--ink);
+  text-decoration-color: var(--red);
+  text-underline-offset: 3px;
+}
+.all-sources {
+  margin-top: 14px;
+  font-size: 0.85rem;
+}
+.all-sources summary {
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.all-sources ul {
+  padding-left: 18px;
+}
+
 /* ---------- Counteroffer: a note on lined paper ---------- */
 .letter {
   position: relative;
@@ -896,6 +1095,7 @@ textarea:focus {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .research-log li.active .log-mark,
   .dial.landed .dial-zone.active,
   .dial.landed .dial-burst,
   .dial.landed .dial-number,

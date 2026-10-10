@@ -64,3 +64,50 @@ export function analyzeDeal(deal, creditTier, kbbValue, lang) {
     lang,
   );
 }
+
+// POST that answers with server-sent events. Calls onEvent(name, data) for each
+// event until the server closes the stream. Rejects on HTTP or network errors.
+export async function postStream(path, body, onEvent, { lang = "en", signal } = {}) {
+  const errors = (STRINGS[lang] ?? STRINGS.en).errors;
+  let res;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal,
+    });
+  } catch (err) {
+    if (err.name === "AbortError") throw err;
+    throw new Error(errors.network);
+  }
+  if (!res.ok || !res.body) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || errors.failed(res.status));
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    let cut;
+    while ((cut = buffer.indexOf("\n\n")) >= 0) {
+      const chunk = buffer.slice(0, cut);
+      buffer = buffer.slice(cut + 2);
+      const event = /^event: (.*)$/m.exec(chunk)?.[1];
+      const data = /^data: (.*)$/m.exec(chunk)?.[1];
+      if (event && data) onEvent(event, JSON.parse(data));
+    }
+  }
+}
+
+export function streamAdvice({ deal, creditTier, kbbValue, lang, profile }, onEvent, signal) {
+  return postStream(
+    "/advise",
+    { deal, credit_tier: creditTier, kbb_value: kbbValue, lang, profile },
+    onEvent,
+    { lang, signal },
+  );
+}

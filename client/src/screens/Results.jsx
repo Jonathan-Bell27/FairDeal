@@ -2,7 +2,7 @@ import { usd } from "../format.js";
 import { useT } from "../i18n.js";
 import Dial from "../Dial.jsx";
 
-export default function Results({ result, onEdit, onCounter }) {
+export default function Results({ result, onEdit, onCounter, profile, setProfile, onAdvise, hasReport }) {
   const t = useT().results;
   const { score, verdict, total_savings, flags, disclaimer } = result;
   // Red flags first, biggest dollar amount first; cautions after.
@@ -53,7 +53,53 @@ export default function Results({ result, onEdit, onCounter }) {
         </button>
       </div>
 
+      {onAdvise && <DeepDive profile={profile} setProfile={setProfile} onStart={onAdvise} hasReport={hasReport} />}
+
       <p className="disclaimer">{disclaimer}</p>
+    </section>
+  );
+}
+
+// Optional questions that let Claude tailor the research and plan to this buyer.
+function DeepDive({ profile, setProfile, onStart, hasReport }) {
+  const t = useT().deep;
+  const set = (key) => (e) => setProfile({ ...profile, [key]: e.target.value });
+  return (
+    <section className="sheet deep-dive" aria-labelledby="deep-title">
+      <p className="eyebrow">{t.eyebrow}</p>
+      <h2 id="deep-title">{t.title}</h2>
+      <p className="muted">{t.lede}</p>
+      <div className="grid">
+        <label className="field">
+          <span>{t.zip}</span>
+          <input inputMode="numeric" autoComplete="postal-code" maxLength={5} placeholder="30303" value={profile.zip} onChange={set("zip")} />
+        </label>
+        <label className="field">
+          <span>{t.income}</span>
+          <input inputMode="decimal" placeholder="3,800" value={profile.monthly_income} onChange={set("monthly_income")} />
+        </label>
+        <label className="field wide">
+          <span>{t.keep}</span>
+          <select value={profile.keep_years} onChange={set("keep_years")}>
+            <option value="">{t.keepSkip}</option>
+            <option value="2">{t.keepShort}</option>
+            <option value="4">{t.keepMid}</option>
+            <option value="7">{t.keepLong}</option>
+          </select>
+        </label>
+        <label className="field wide">
+          <span>
+            {t.notes} <em>{t.optional}</em>
+          </span>
+          <textarea rows={2} maxLength={500} placeholder={t.notesPlaceholder} value={profile.notes} onChange={set("notes")} />
+        </label>
+      </div>
+      <p className="hint">{t.privacy}</p>
+      <div className="actions">
+        <button className="btn primary big" onClick={onStart}>
+          {hasReport ? t.view : t.start}
+        </button>
+      </div>
     </section>
   );
 }
