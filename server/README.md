@@ -77,7 +77,8 @@ Response:
       "dollar_impact": 16383,
       "points": 25,
       "source": "Experian, State of the Automotive Finance Market ...",
-      "ask": "Lower the APR to 8% ..."
+      "ask": "Lower the APR to 8.81% ...",
+      "line": { "label": "APR", "charged": "18.99%", "note": "avg for Good credit: 8.81%", "strike": false }
     }
   ],
   "counteroffer": "Hi, I'm interested in ...",

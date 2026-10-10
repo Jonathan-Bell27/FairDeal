@@ -40,6 +40,7 @@ export default function Review({
 
   return (
     <section className="screen">
+      <p className="eyebrow">Step 2 of 3</p>
       <h1>Check the numbers</h1>
       <p className="lede">{note || "Enter what's on your buyer's order or loan offer. Leave blank anything you don't see."}</p>
 

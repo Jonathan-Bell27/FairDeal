@@ -78,6 +78,14 @@ test("points are capped at 25 per flag and score floors at 0", () => {
   }
 });
 
+test("every flag carries a marked-up line item", () => {
+  for (const s of answerKey) {
+    for (const f of run(s.file).flags) {
+      assert.ok(f.line?.label && f.line.charged && f.line.note, `${s.file} ${f.id}`);
+    }
+  }
+});
+
 test("loan math matches the contract", () => {
   const e = answerKey.find((s) => s.file === "01_clean.pdf").expected_extraction;
   assert.ok(Math.abs(monthlyPayment(e.amount_financed, e.apr, e.term_months) - e.monthly_payment) < 1);
