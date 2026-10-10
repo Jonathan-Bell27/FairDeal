@@ -3,6 +3,7 @@ import { usd } from "../format.js";
 import { useT } from "../i18n.js";
 import Dial from "../Dial.jsx";
 import { useCountUp } from "../useCountUp.js";
+import FinePrint from "./FinePrint.jsx";
 
 export default function Results({
   result,
@@ -91,6 +92,8 @@ export default function Results({
           </div>
         </>
       )}
+
+      <FinePrint />
 
       <div className="actions">
         <button className="btn red big" onClick={onCounter}>

@@ -1383,6 +1383,153 @@ textarea {
   }
 }
 
+/* ---------- Fine print ---------- */
+.fine-print .section-title + .small {
+  margin-top: -4px;
+}
+.fp-mock {
+  margin: 0 0 14px;
+}
+.fp-loading .small {
+  margin-bottom: 12px;
+}
+.fp-skel-line {
+  height: 12px;
+  margin-top: 10px;
+}
+.fp-skel-line.short {
+  width: 60%;
+}
+.fp-card {
+  border-left: 5px solid var(--muted);
+}
+.fp-card.protects {
+  border-left-color: var(--g-green);
+}
+.fp-card.warning {
+  border-left-color: var(--amber);
+}
+.fp-card p {
+  margin: 0 0 8px;
+  font-size: 0.93rem;
+}
+.fp-card .fp-tone {
+  margin: 0 0 2px;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fp-card.protects .fp-tone {
+  color: var(--green);
+}
+.fp-card.warning .fp-tone {
+  color: var(--amber);
+}
+.fp-card .fp-title {
+  margin: 0 0 10px;
+  font-family: var(--serif);
+  font-size: 1.12rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--ink);
+}
+.fp-quote {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px dashed var(--rule);
+  border-radius: 4px;
+  background: var(--paper);
+}
+.fp-quote blockquote {
+  margin: 0;
+  font-family: var(--mono);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.fp-quote mark,
+.fp-overlay-quote mark {
+  background: var(--hilite);
+  color: inherit;
+  padding: 0.05em 0.15em;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.fp-quote figcaption {
+  margin-top: 6px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--muted);
+}
+.fp-card .source {
+  font-size: 0.72rem;
+}
+.fp-show {
+  margin-top: 12px;
+  padding: 11px 16px;
+}
+.fp-checklist ul {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 0.93rem;
+}
+.fp-checklist li {
+  margin-bottom: 6px;
+}
+.fp-checklist li::marker {
+  content: "☐  ";
+  color: var(--amber);
+}
+.fp-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: calc(20px + env(safe-area-inset-top)) 20px calc(20px + env(safe-area-inset-bottom));
+  background: var(--sheet);
+  color: var(--ink);
+  animation: fp-in 0.18s ease-out;
+}
+.fp-overlay > * {
+  width: 100%;
+  max-width: 760px;
+  margin-inline: auto;
+}
+.fp-overlay-label {
+  margin-block: 0;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.fp-overlay-quote {
+  flex: 1;
+  margin-block: 0;
+  overflow-y: auto;
+  font-family: var(--serif);
+  font-size: clamp(1.9rem, 8vw, 3.2rem);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.fp-overlay-quote.long {
+  font-size: clamp(1.45rem, 5.6vw, 2.4rem);
+}
+@keyframes fp-in {
+  from {
+    opacity: 0;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .research-log li.active .log-mark,
   .fixed-to,
@@ -1391,6 +1538,7 @@ textarea {
   .dial.landed .dial-burst,
   .dial.landed .dial-number,
   .skel,
+  .fp-overlay,
   .stamp,
   .charged.strike::after,
   .pen-circle path,

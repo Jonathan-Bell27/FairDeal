@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import { CREDIT_TIERS, extractDeal } from "../api.js";
+import { CREDIT_TIERS, extractDeal, readFinePrint } from "../api.js";
 import { LangContext, useT } from "../i18n.js";
 import { prepareUpload } from "../image.js";
 import { PenCircle } from "../Pen.jsx";
@@ -29,8 +29,12 @@ export default function Upload({ creditTier, setCreditTier, kbbValue, setKbbValu
     setBusy(true);
     setError("");
     try {
-      const { deal, ms } = await extractDeal(await prepareUpload(file), lang);
-      onExtracted(deal, ms);
+      const upload = await prepareUpload(file);
+      // The fine print is read alongside the numbers; the Review screen doesn't wait for it.
+      const finePrint = readFinePrint(upload, lang);
+      finePrint.catch(() => {}); // a failed read only hides the fine print section
+      const { deal, ms } = await extractDeal(upload, lang);
+      onExtracted(deal, ms, finePrint);
     } catch (err) {
       setError(err.message);
     } finally {

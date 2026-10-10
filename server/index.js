@@ -4,9 +4,11 @@ import cors from "cors";
 import multer from "multer";
 import Anthropic from "@anthropic-ai/sdk";
 import { extractDeal, MODEL, SUPPORTED_TYPES } from "./extract.js";
+import { explainFinePrint, readFinePrint } from "./fineprint.js";
 import { analyze, CREDIT_TIERS, DISCLAIMER } from "./rules.js";
 import { runAdvisor } from "./advisor.js";
 import { runChat } from "./chat.js";
+import { mockFinePrint } from "./mock.js";
 import { openStream } from "./sse.js";
 import { rateLimit } from "./limits.js";
 import { dealSchema, emptyDeal } from "./schema.js";
@@ -21,7 +23,7 @@ app.use(cors(origins ? { origin: origins } : {}));
 app.use(express.json({ limit: "1mb" }));
 
 app.get("/", (req, res) => {
-  res.json({ name: "FairDeal API", endpoints: ["GET /health", "GET /config", "POST /extract", "POST /analyze", "POST /advise", "POST /chat"] });
+  res.json({ name: "FairDeal API", endpoints: ["GET /health", "GET /config", "POST /extract", "POST /fineprint", "POST /analyze", "POST /advise", "POST /chat"] });
 });
 
 app.get("/health", (req, res) => {
@@ -58,6 +60,43 @@ app.post("/extract", upload.single("file"), async (req, res) => {
       return res.status(status).json({ error: `Claude API error (${err.status ?? "network"}). Try again or use manual entry.` });
     }
     res.status(502).json({ error: err.message || "Extraction failed. Try manual entry." });
+  }
+});
+
+// Fine print. multipart/form-data with field "file" (photo or PDF) and optional "lang":
+// Claude quotes specific clauses and vetted text (data/clauses.js) explains them. A JSON
+// body { clauses: [{ type, quote }], lang } re-explains clauses already read, without Claude.
+// Returns { clauses: [{ type, quote, tone, title, explain, action, source }], general, checklist, mock? }.
+const fineprintLimit = rateLimit({
+  max: Number(process.env.FINEPRINT_LIMIT_PER_HOUR || 30),
+  windowMs: 60 * 60 * 1000,
+  message: "You've checked a lot of fine print in the last hour. Try again later.",
+});
+// Only reads that call Claude count toward the limit.
+const limitReads = (req, res, next) => (req.is("multipart/form-data") ? fineprintLimit(req, res, next) : next());
+app.post("/fineprint", limitReads, upload.single("file"), async (req, res) => {
+  const lang = req.body?.lang ?? req.query.lang;
+  if (!req.file) {
+    if (Array.isArray(req.body?.clauses)) return res.json(explainFinePrint(req.body.clauses, lang));
+    return res.status(400).json({ error: 'Send the photo or PDF in a form field named "file".' });
+  }
+  if (!SUPPORTED_TYPES[req.file.mimetype]) {
+    return res.status(415).json({
+      error: `Unsupported file type ${req.file.mimetype}. Use a JPEG, PNG, WebP, or PDF.`,
+    });
+  }
+  try {
+    if (process.env.FAIRDEAL_MOCK_AI === "1") {
+      return res.json({ ...explainFinePrint(await mockFinePrint(req.file.originalname), lang), mock: true });
+    }
+    res.json(explainFinePrint(await readFinePrint(req.file.buffer, req.file.mimetype), lang));
+  } catch (err) {
+    console.error("fineprint failed:", err);
+    if (err instanceof Anthropic.APIError) {
+      const status = err instanceof Anthropic.RateLimitError ? 429 : 502;
+      return res.status(status).json({ error: `Claude API error (${err.status ?? "network"}). Try again in a moment.` });
+    }
+    res.status(502).json({ error: err.message || "Couldn't read the fine print. Try again." });
   }
 });
 

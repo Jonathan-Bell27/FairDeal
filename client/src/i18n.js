@@ -117,6 +117,21 @@ export const STRINGS = {
       back: "Back to the markup",
     },
 
+    finePrint: {
+      title: "In the fine print",
+      lede: "Lines Claude found on your paperwork, explained with information from the FTC and CFPB.",
+      loading: "Reading the fine print…",
+      mock: "Sample fine print: offline demo mode. These quotes are examples from our test contracts.",
+      tone: { protects: "Protects you", warning: "Watch out", info: "Good to know" },
+      onPaper: "On your paperwork. Check the original.",
+      doThis: "What to do:",
+      source: "Source",
+      checklist: "Before you drive off",
+      show: "Show the dealer",
+      showLabel: "From my paperwork",
+      close: "Close",
+    },
+
     deep: {
       eyebrow: "Go deeper with Claude",
       title: "Get a plan made for you",
@@ -354,6 +369,21 @@ export const STRINGS = {
       copy: "Copiar mensaje",
       copied: "Copiado ✓",
       back: "Volver a las correcciones",
+    },
+
+    finePrint: {
+      title: "En la letra pequeña",
+      lede: "Líneas que Claude encontró en tus documentos, explicadas con información de la FTC y la CFPB.",
+      loading: "Leyendo la letra pequeña…",
+      mock: "Letra pequeña de ejemplo: modo demo sin conexión. Estas citas son ejemplos de nuestros contratos de prueba.",
+      tone: { protects: "Te protege", warning: "Cuidado", info: "Para que sepas" },
+      onPaper: "En tus documentos. Compáralo con el original.",
+      doThis: "Qué hacer:",
+      source: "Fuente",
+      checklist: "Antes de llevarte el auto",
+      show: "Mostrar al concesionario",
+      showLabel: "De mis documentos",
+      close: "Cerrar",
     },
 
     deep: {
