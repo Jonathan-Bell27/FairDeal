@@ -92,5 +92,4 @@ Start at **100**. Subtract **1 point per $100** of avoidable cost, capped at **2
 | Frontend | React (Vite), mobile-first |
 | Backend | Node.js / Express (holds the API key, runs the rules engine) |
 | LLM | Claude API with structured outputs (reads photos and PDFs natively) |
-| Data | Supabase (APR by tier, add-on price ranges, uploads, test results) |
 | Hosting | Vercel (frontend), Render or Railway (backend) |
