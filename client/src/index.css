@@ -13,10 +13,10 @@
   --g-red: #db1515;
   --g-yellow: #ffc933;
   --g-green: #3ccf7a;
-   /* Number under the meter */
+  /* Number under the meter: darker shades of the meter colors, so the text is readable */
   --g-red-text: #db1515;
-  --g-yellow-text: #ffc933;
-  --g-green-text: #3ccf7a;
+  --g-yellow-text: #8a6500;
+  --g-green-text: #1e7a45;
   --green: #24744a;
   --amber: #a5610a;
   --hilite: rgba(255, 220, 60, 0.55);
@@ -40,7 +40,7 @@
   --ink: #efe8d9;
   --muted: #a59c8a;
   --rule: #3a3529;
-  --red: #db1515; /*Analysis texts if deal isn't fair*/
+  --red: #ee4d4d; /*Analysis texts if deal isn't fair (lighter than the meter red, so it's readable)*/
   --red-wash: rgba(255, 122, 107, 0.09);
   --red-btn: #db1515;  /*Write my Counteroffer */
   /*Meter Customization*/
@@ -48,7 +48,7 @@
   --g-yellow: #ffc933;
   --g-green: #3ccf7a;
   /* Number under the meter */
-  --g-red-text: #db1515;
+  --g-red-text: #ee4d4d;
   --g-yellow-text: #ffc933;
   --g-green-text: #3ccf7a;
   --green: #6fd197;
@@ -64,13 +64,13 @@
     --ink: #efe8d9;
     --muted: #a59c8a;
     --rule: #3a3529;
-    --red: #f70202;
+    --red: #fd3838;
     --red-wash: rgba(255, 122, 107, 0.09);
     --red-btn: #f70202;
     --g-red: #f70202;
     --g-yellow: #ffc933;
     --g-green: #3ccf7a;
-    --g-red-text: #f70202;
+    --g-red-text: #fd3838;
     --g-yellow-text: #ffc933;
     --g-green-text: #3ccf7a;
     --green: #6fd197;
