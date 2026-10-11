@@ -6,15 +6,17 @@
   --ink: #1d1b17;
   --muted: #6c6455;
   --rule: #e2d8c3;
-  --red: #c4281b;
+  --red: #db1515; /*Analysis texts if deal isn't fair*/
   --red-wash: rgba(196, 40, 27, 0.07);
-  --red-btn: #c4281b;
-  --g-red: #e0322b;
-  --g-yellow: #f5b800;
-  --g-green: #1f9d55;
-  --g-red-text: #c4281b;
-  --g-yellow-text: #a06e00;
-  --g-green-text: #1b7f46;
+  --red-btn: #000000; /*Write my Counteroffer */
+  /*Meter Customization*/
+  --g-red: #db1515;
+  --g-yellow: #ffc933;
+  --g-green: #3ccf7a;
+   /* Number under the meter */
+  --g-red-text: #db1515;
+  --g-yellow-text: #ffc933;
+  --g-green-text: #3ccf7a;
   --green: #24744a;
   --amber: #a5610a;
   --hilite: rgba(255, 220, 60, 0.55);
@@ -23,7 +25,7 @@
   --serif: "Fraunces Variable", Georgia, serif;
   --sans: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
-  --pen: "Caveat Variable", "Bradley Hand", cursive;
+  --pen: var(--sans); /* Red-pen notes use the plain font */
 
   color-scheme: light;
   font-family: var(--sans);
@@ -38,15 +40,17 @@
   --ink: #efe8d9;
   --muted: #a59c8a;
   --rule: #3a3529;
-  --red: #ff7a6b;
+  --red: #db1515; /*Analysis texts if deal isn't fair*/
   --red-wash: rgba(255, 122, 107, 0.09);
-  --red-btn: #c63325;
-  --g-red: #ff5a4f;
+  --red-btn: #db1515;  /*Write my Counteroffer */
+  /*Meter Customization*/
+  --g-red: #db1515;
   --g-yellow: #ffc933;
   --g-green: #3ccf7a;
-  --g-red-text: #ff6e64;
+  /* Number under the meter */
+  --g-red-text: #db1515;
   --g-yellow-text: #ffc933;
-  --g-green-text: #4fd88a;
+  --g-green-text: #3ccf7a;
   --green: #6fd197;
   --amber: #f2b24f;
   --hilite: rgba(242, 196, 60, 0.28);
@@ -60,15 +64,15 @@
     --ink: #efe8d9;
     --muted: #a59c8a;
     --rule: #3a3529;
-    --red: #ff7a6b;
+    --red: #f70202;
     --red-wash: rgba(255, 122, 107, 0.09);
-    --red-btn: #c63325;
-    --g-red: #ff5a4f;
+    --red-btn: #f70202;
+    --g-red: #f70202;
     --g-yellow: #ffc933;
     --g-green: #3ccf7a;
-    --g-red-text: #ff6e64;
+    --g-red-text: #f70202;
     --g-yellow-text: #ffc933;
-    --g-green-text: #4fd88a;
+    --g-green-text: #3ccf7a;
     --green: #6fd197;
     --amber: #f2b24f;
     --hilite: rgba(242, 196, 60, 0.28);
